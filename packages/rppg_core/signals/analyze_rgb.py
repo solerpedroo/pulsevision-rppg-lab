@@ -13,9 +13,10 @@ from typing import Any
 import numpy as np
 import scipy
 from numpy.typing import NDArray
-from rppg_types.models import Roi
+from rppg_types.models import Method, Roi
 
-from rppg_core.estimation.green_pipeline import WindowAnalysis, analyze_trace
+from rppg_core.estimation.pipeline import WindowAnalysis, analyze_trace
+from rppg_core.methods.config import MethodConfig, load_method_config
 
 from .config import SignalConfig
 from .temporal import FloatArray, SignalInputError
@@ -79,7 +80,9 @@ def save_plot(analysis: WindowAnalysis, path: Path, *, synthetic: bool) -> None:
 
     figure, axes = plt.subplots(2, 1, figsize=(9, 6), layout="constrained")
     title = (
-        "Artificial RGB — synthetic demonstration" if synthetic else "Experimental offline GREEN"
+        "Artificial RGB — synthetic demonstration"
+        if synthetic
+        else f"Experimental offline {analysis.estimate.method}"
     )
     estimate = analysis.estimate
     figure.suptitle(
@@ -94,7 +97,7 @@ def save_plot(analysis: WindowAnalysis, path: Path, *, synthetic: bool) -> None:
     axes[0].plot(analysis.timestamps_s, analysis.signal)
     axes[0].set(
         xlabel="Session time (s)",
-        ylabel="GREEN (relative intensity)",
+        ylabel=f"{analysis.estimate.method} (relative intensity)",
         title="Filtered signal; edge samples excluded",
     )
     axes[1].plot(analysis.frequencies_hz, analysis.power)
@@ -113,11 +116,24 @@ def export_analysis(
     output: Path,
     *,
     roi: Roi = "combined",
+    method: Method = "GREEN",
+    method_config: MethodConfig | None = None,
     config: SignalConfig | None = None,
 ) -> dict[str, Any]:
     config = config or SignalConfig()
+    method_config = method_config or MethodConfig()
     timestamps, rgb, valid = load_csv(source, roi)
-    analyses = list(analyze_trace(timestamps, rgb, roi=roi, valid=valid, config=config))
+    analyses = list(
+        analyze_trace(
+            timestamps,
+            rgb,
+            roi=roi,
+            method=method,
+            method_config=method_config,
+            valid=valid,
+            config=config,
+        )
+    )
     synthetic = False
     with source.open(newline="") as handle:
         rows = [row for row in csv.DictReader(handle) if row["roi"] == roi]
@@ -126,11 +142,12 @@ def export_analysis(
         )
     report = {
         "schema_version": "1.0",
-        "method": "GREEN",
+        "method": method,
         "roi": roi,
         "input_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "input_kind": "synthetic" if synthetic else "unverified_rgb_trace",
         "config": asdict(config),
+        "method_config": asdict(method_config),
         "environment": {"numpy": np.__version__, "scipy": scipy.__version__},
         "eligible_windows": len(analyses),
         "coverage": sum(item.estimate.bpm is not None for item in analyses) / len(analyses),
@@ -143,7 +160,7 @@ def export_analysis(
     output.mkdir(parents=True, exist_ok=False)
     try:
         (output / "estimates.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
-        save_plot(analyses[-1], output / "green_diagnostics.png", synthetic=synthetic)
+        save_plot(analyses[-1], output / f"{method.lower()}_diagnostics.png", synthetic=synthetic)
     except Exception:
         shutil.rmtree(output)
         raise
@@ -157,9 +174,22 @@ def main() -> int:
     parser.add_argument(
         "--roi", choices=["forehead", "left_cheek", "right_cheek", "combined"], default="combined"
     )
+    parser.add_argument("--method", choices=["GREEN", "CHROM", "POS", "all"], default="GREEN")
+    parser.add_argument("--method-config", type=Path)
     args = parser.parse_args()
     try:
-        report = export_analysis(args.csv, args.output, roi=args.roi)
+        method_config = (
+            load_method_config(args.method_config) if args.method_config else MethodConfig()
+        )
+        if args.method == "all":
+            from .compare_methods import export_comparison
+
+            export_comparison(args.csv, args.output, roi=args.roi, method_config=method_config)
+            print(json.dumps({"methods": ["GREEN", "CHROM", "POS"]}))
+            return 0
+        report = export_analysis(
+            args.csv, args.output, roi=args.roi, method=args.method, method_config=method_config
+        )
     except (ValueError, OSError) as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         return 2
