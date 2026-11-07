@@ -3,7 +3,11 @@ name = "pulsevision-rppg-lab"
 version = "0.1.0"
 description = "Local-first experimental rPPG laboratory"
 requires-python = ">=3.12,<3.13"
-dependencies = ["pydantic>=2.12,<3"]
+dependencies = [
+    "av==19.0.2",
+    "numpy==2.5.4",
+    "pydantic>=2.12,<3",
+]
 
 [dependency-groups]
 dev = ["pytest>=9,<10", "ruff>=0.14,<1", "mypy>=1.18,<2"]
