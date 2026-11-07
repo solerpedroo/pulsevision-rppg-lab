@@ -2,6 +2,16 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 2 — 2026-11-07
+
+- PV-0201–PV-0209: Face Landmarker VIDEO/CPU integrado com rejeição de múltiplas faces.
+- ROIs roi-v1, máscaras fotométricas e exclusões de olhos, boca e sobrancelhas.
+- Extração RGB por região/união, flags de movimento, escala, brilho e tracking.
+- CLI CSV com rejeições explícitas e metadados; sem gravação de frames.
+- Download explícito de modelo oficial versionado com SHA256 e fontes de licença.
+- Testes sintéticos de geometria e pipeline, smoke test local do detector real.
+- Pendente validação visual em rostos autorizados; nenhuma precisão alegada.
+
 ## Não lançado — Onda 1 — 2026-11-07
 
 - PV-0101–PV-0107: VideoReader sequencial com PyAV e RGB24.
