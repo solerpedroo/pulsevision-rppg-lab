@@ -2,6 +2,17 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 3 — 2026-11-07
+
+- PV-0301–PV-0308: validação temporal, reamostragem limitada e janelamento offline.
+- GREEN com normalização/detrending, Butterworth SOS não causal e Welch.
+- BPM opcional e motivos de abstenção, sem reutilizar resultados anteriores.
+- Metadata opcional de processamento em EstimateResult; schemas/TS regenerados.
+- Gerador determinístico RGB artificial e CLI de análise CSV → JSON/PNG.
+- Gates iniciais de energia/concentração, ambiguidade, validade e Nyquist.
+- Testes de frequência, harmônicos, ruído, lacunas, NaNs e integração dos exports.
+- Sem validação em pessoas, equivalência live ou alegações de precisão clínica.
+
 ## Não lançado — Onda 2 — 2026-11-07
 
 - PV-0201–PV-0209: Face Landmarker VIDEO/CPU integrado com rejeição de múltiplas faces.
