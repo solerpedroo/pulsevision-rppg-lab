@@ -6,7 +6,7 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–1: fundação e ingestão temporal de vídeo. Ainda não há câmera, upload,
+Ondas 0–2: fundação, ingestão temporal e extração RGB por ROI facial. Ainda não há câmera, upload,
 algoritmos rPPG ou resultados de BPM.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
@@ -73,3 +73,17 @@ uv run pytest tests/test_acquisition.py
 A CLI apresenta metadados e timeline com PTS reais em JSON. Suporte testado:
 MP4/MOV com MPEG-4 e WebM com VP9. Veja
 [contratos e limites da aquisição](docs/architecture/acquisition.md).
+
+## Extração de RGB por região facial
+
+```bash
+uv run python scripts/fetch_face_model.py
+uv run python -m rppg_core.roi.extract_rgb /caminho/video.mp4 \
+  --model models/face_landmarker.task --output artifacts/sessao/rgb_traces.csv
+```
+
+Veja [uso e limites](docs/architecture/face-roi.md) e o
+[registro do modelo](docs/research/face-model.md). Pesos ficam fora do Git.
+Sem face ou ROI confiável, o CSV registra rejeição com RGB vazio.
+Não há BPM nesta onda; a geometria em rostos reais ainda requer validação visual
+com material autorizado.
