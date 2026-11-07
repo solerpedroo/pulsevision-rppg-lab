@@ -1,0 +1,5 @@
+{
+  "version": "classical-v1",
+  "projection_window_s": 1.6,
+  "epsilon": 1e-9
+}
