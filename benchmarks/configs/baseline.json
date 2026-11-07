@@ -1,0 +1,9 @@
+{
+  "protocol_version": "1",
+  "status": "draft_not_for_final_test",
+  "seed": 42,
+  "window_s": 20,
+  "stride_s": 1,
+  "frequency_band_hz": [0.7, 3.0],
+  "methods": ["GREEN", "CHROM", "POS"]
+}
