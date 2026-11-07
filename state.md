@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 0 — fundação implementada e validada localmente.
-Próxima onda: 1 — ingestão de vídeo e integridade temporal. Não iniciada.
+Atualizado: 2026-11-07. Onda atual: 1 — ingestão temporal implementada e validada localmente.
+Próxima onda: 2 — detecção facial, ROIs e extração RGB. Não iniciada.
 
 ## Contexto e retomada
 
@@ -53,9 +53,53 @@ offline e só depois API, interface e webcam local. Não há inferência nesta e
 - Não há API, câmera, upload, modelos, dados reais ou validação de precisão.
 - Não houve commit, push, publicação ou modificação do plano original.
 
-## Próxima ação — Onda 1
+## Histórico — preparação da Onda 1
 
 PV-0101–PV-0107: selecionar decoder com PTS (preferência PyAV), piná-lo e testar
 no Fedora; implementar FrameSample e erros tipados; gerar fixtures CFR/VFR
 sintéticas em execução, sem versionar vídeos privados; criar CLI inspect_video.
 Verificar FFmpeg/codecs presentes antes de declarar suporte MP4/WebM/MOV.
+
+## Onda 1 — critérios e implementação
+
+- [x] PV-0101: VideoReader com PyAV 19.0.2; MP4/MOV MPEG-4 e WebM VP9 testados.
+- [x] PV-0102: codec, duração, resolução, rotação, FPS informado, base e origem.
+- [x] PV-0103: decode por PTS, VFR preservado; imagens idênticas não são removidas.
+- [x] PV-0104: FrameSample com RGB24, timestamp relativo estritamente crescente,
+      PTS/base racional e timestamp original preservados.
+- [x] PV-0105: erros tipados para abertura, stream/decoder, decode e timestamps.
+- [x] PV-0106: fixtures sintéticas temporárias CFR/VFR, cor constante e rotação.
+- [x] PV-0107: testes de intervalos, contagem, origem, orientação, truncamento e CLI.
+- CLI: uv run python -m rppg_core.acquisition.inspect_video <arquivo>.
+- ADR 0003 e docs/architecture/acquisition.md descrevem contratos e limitações.
+- Nenhuma implementação de algoritmos rPPG ou detecção facial antecipada.
+
+## Evidências da Onda 1
+
+- uv sync/lock: PyAV 19.0.2 e NumPy 2.5.4 pinados.
+- O sistema não possui comando ffmpeg; wheel PyAV disponibiliza bibliotecas
+  libavcodec/libavformat 63.1.102. Não houve instalação de pacotes do sistema.
+- uv run ruff check .: passou.
+- uv run mypy: passou em oito arquivos fonte.
+- uv run pytest: 33 testes passaram (24 aquisição e 9 contratos).
+- npm run lint, npm run typecheck, npm test: passaram (2 testes web).
+- NEXT_TELEMETRY_DISABLED=1 npm run build: passou.
+- npm run format:check e git diff --check: passaram.
+- CI continua configurada; não executada remotamente nesta sessão.
+
+## Limites específicos da aquisição
+
+A integridade completa só é verificada ao consumir todo o gerador. Feche-o
+explicitamente se interromper cedo. Descarte resultados parciais após erro.
+Não há garantia de detectar todo truncamento quando o container não declara
+contagem e o decoder encerra sem erro. Gaps usam FPS informado como heurística;
+não são prova de frames perdidos. Pixels mantêm orientação codificada; rotação
+deve ser aplicada de forma coerente com ROIs na próxima onda. Não há seek.
+Relatório CLI acumula timeline de metadados; reader não acumula pixels.
+
+## Próxima ação — Onda 2
+
+PV-0201–PV-0209: integrar Face Landmarker Python com modelo cuja licença seja
+verificada, definir ROIs e máscaras com orientação explícita, extrair médias RGB
+e qualidade por região, tratar ausência/múltiplas faces e testar geometria/BGR-RGB.
+Modelo não deve ser versionado sem autorização de redistribuição.
