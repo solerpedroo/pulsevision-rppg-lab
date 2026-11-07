@@ -6,8 +6,8 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–3: fundação, ingestão temporal, ROIs/RGB e baseline GREEN offline. Ainda não há câmera, upload,
-CHROM/POS ou validação em pessoas. GREEN já estima periodicidade em traces RGB.
+Ondas 0–4: fundação, ingestão temporal, ROIs/RGB e GREEN/CHROM/POS offline. Ainda não há câmera, upload,
+validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
 A evolução segue: ingestão temporal → ROI/RGB → GREEN → CHROM/POS → qualidade →
@@ -99,3 +99,15 @@ uv run python -m rppg_core.signals.analyze_rgb artifacts/green-demo/rgb_syntheti
 
 Gera estimativas ou abstenções em JSON e diagnóstico PNG. A demonstração é
 artificial, sem rosto ou fisiologia real. Veja [especificação e uso](docs/architecture/green-dsp.md).
+
+## Comparar GREEN, CHROM e POS
+
+```bash
+uv run python -m rppg_core.signals.analyze_rgb artifacts/green-demo/rgb_synthetic.csv \
+  --method all --method-config configs/methods/classical-v1.json \
+  --output artifacts/classical-comparison
+```
+
+JSON e PNG com suporte temporal comum, sinais, PSD e BPM por janela.
+Referências numéricas e limites em
+[docs/architecture/classical-methods.md](docs/architecture/classical-methods.md).
