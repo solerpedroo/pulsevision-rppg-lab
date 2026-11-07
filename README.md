@@ -6,7 +6,8 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Onda 0: fundação. Ainda não há captura, upload, algoritmos ou resultados de BPM.
+Ondas 0–1: fundação e ingestão temporal de vídeo. Ainda não há câmera, upload,
+algoritmos rPPG ou resultados de BPM.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
 A evolução segue: ingestão temporal → ROI/RGB → GREEN → CHROM/POS → qualidade →
@@ -15,7 +16,8 @@ benchmark → API → interface e webcam.
 ## Setup Fedora/Linux
 
 Requisitos: Git, uv 0.12.24 e Node 24 com npm. Python 3.12 é gerenciado pelo uv;
-não substitua o Python do sistema. FFmpeg será necessário a partir da Onda 1.
+não substitua o Python do sistema. PyAV inclui bibliotecas FFmpeg no wheel; o executável ffmpeg não é exigido
+para ingestão e fixtures desta onda.
 Execute da raiz:
 
 ```bash
@@ -60,3 +62,14 @@ AGENTS.md orienta agentes; CLAUDE.md e .cursor/rules/ apontam para a mesma fonte
 Registre progresso em state.md, mudanças em CHANGELOG.md e decisões em docs/adrs/.
 Dados privados e vídeos ficam fora do Git. Leia a política em docs/privacy/policy.md.
 Código MIT; datasets e modelos seguem seus próprios termos.
+
+## Inspeção de vídeo
+
+```bash
+uv run python -m rppg_core.acquisition.inspect_video /caminho/video.mp4
+uv run pytest tests/test_acquisition.py
+```
+
+A CLI apresenta metadados e timeline com PTS reais em JSON. Suporte testado:
+MP4/MOV com MPEG-4 e WebM com VP9. Veja
+[contratos e limites da aquisição](docs/architecture/acquisition.md).
