@@ -13,19 +13,21 @@ def make_video(
     *,
     rotation: int = 0,
     offset: int = 0,
+    width: int = 64,
+    height: int = 48,
 ) -> Path:
     codec = "libvpx-vp9" if path.suffix == ".webm" else "mpeg4"
     options = {"movflags": "+faststart"} if path.suffix in {".mp4", ".mov"} else {}
     with av.open(str(path), "w", options=options) as output:
         stream = output.add_stream(codec, rate=25)
-        stream.width, stream.height = 64, 48
+        stream.width, stream.height = width, height
         stream.pix_fmt = "yuv420p"
         stream.codec_context.time_base = Fraction(1, 1000)
         stream.time_base = Fraction(1, 1000)
         if rotation:
             stream.set_display_rotation(rotation)
         for timestamp in pts:
-            pixels = np.zeros((48, 64, 3), dtype=np.uint8)
+            pixels = np.zeros((height, width, 3), dtype=np.uint8)
             pixels[:] = (180, 80, 40)
             frame = av.VideoFrame.from_ndarray(pixels, format="rgb24")
             frame.pts = timestamp + offset
