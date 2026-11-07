@@ -2,6 +2,16 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 4 — 2026-11-07
+
+- PV-0401–PV-0408: CHROM/POS com janelas internas, overlap-add e suporte explícito.
+- Registry imutável e configuração classical-v1; engine compartilhado preserva GREEN.
+- CLI para método individual ou comparação com janela, ROI e margem temporal comuns.
+- Exportação de sinais, PSD e BPM temporal, com abstenções e contagens por método.
+- Referência pyVHR fixada por commit e fixture sintética de regressão offline.
+- Documentadas diferenças de filtragem, arredondamento, bordas e licenças upstream.
+- Sem benchmark em pessoas ou implementação causal/live.
+
 ## Não lançado — Onda 3 — 2026-11-07
 
 - PV-0301–PV-0308: validação temporal, reamostragem limitada e janelamento offline.
