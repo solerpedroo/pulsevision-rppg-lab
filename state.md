@@ -1,7 +1,8 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 2 — face/ROI/RGB implementados e testados em entradas sintéticas.
-Próxima onda: 3 — DSP e GREEN. Não iniciada. Validação visual em rostos autorizados pendente.
+Atualizado: 2026-11-07. Onda atual: 3 — GREEN/DSP offline implementado e testado em sinais sintéticos.
+Próxima onda: 4 — CHROM/POS e equivalência com referências. Não iniciada.
+Validação visual de ROIs em rostos autorizados continua pendente.
 
 ## Contexto e retomada
 
@@ -147,10 +148,61 @@ Bundle não é redistribuído. Sem auto-download na importação, CI ou inferên
 Não há preview com rosto nem medição de BPM. Metadados e CSV devem ser consumidos
 como par; não há transação entre arquivos resistente a interrupção abrupta.
 
-## Próxima ação — Onda 3
+## Histórico — preparação da Onda 3
 
 PV-0301–PV-0308: traços RGB → resampling com lacunas explícitas → normalização/
 detrending → GREEN → filtro estável → Welch/FFT → BPM ou abstenção.
 Usar sinais sintéticos com frequência conhecida e tolerância ligada à resolução
 temporal; rejeitar sinais constantes, NaNs, dados curtos e timestamps inválidos.
 Não apresentar esses testes como validação clínica ou avaliação em dataset real.
+
+## Onda 3 — critérios e implementação
+
+- [x] PV-0301: cadência mediana, reamostragem linear quando necessária e limite
+      explícito de gaps, sem extrapolar nem apagar amostras inválidas.
+- [x] PV-0302: normalização G/mean(G)-1, detrend linear e janelas 20 s/stride 1 s.
+- [x] PV-0303: Butterworth SOS ordem 4, 0,7–3 Hz e sosfiltfilt offline.
+- [x] PV-0304: Welch com Hann, bins sem zero-padding e pico → BPM.
+- [x] PV-0305: método GREEN independente de HTTP e componentes web.
+- [x] PV-0306: gerador sintético com seed, frequência, ruído e harmônicos.
+- [x] PV-0307: frequências, ruído, harmônicos, constantes, trend, NaNs, lacunas,
+      Nyquist, timestamps e limites de janela testados.
+- [x] PV-0308: EstimateResult com BPM opcional e metadata de DSP;
+      JSON Schema e tipos TS regenerados de forma aditiva.
+- Exportação: CSV da Onda 2 → estimativas JSON e diagnóstico PNG.
+- ADR 0005 e docs/architecture/green-dsp.md registram parâmetros e limites.
+- Nenhum método CHROM/POS, API ou DSP live antecipado.
+
+## Evidências da Onda 3
+
+- uv sync --locked: SciPy 1.18.1 pinado; scipy-stubs para tipagem.
+- uv run ruff check . e uv run mypy: passaram (26 arquivos fonte).
+- uv run pytest: 98 testes passaram localmente, 44 de GREEN/DSP.
+- npm run lint, npm run typecheck e npm test: passaram (2 testes web).
+- NEXT_TELEMETRY_DISABLED=1 npm run build: passou.
+- Schemas exportados e npm run contracts executado.
+- npm run format:check e git diff --check: passaram.
+- Demo artificial de 90 BPM: artifacts/wave3-demo/rgb_synthetic.csv e
+  artifacts/wave3-demo/analysis/{estimates.json,green_diagnostics.png}.
+  11 janelas aceitas; PNG inspecionado, rotulado artificial e com eixos/unidades.
+  Artefatos locais ignorados pelo Git; não são medidas reais.
+- CI configurada, sem execução remota nesta sessão.
+
+## Limites específicos do GREEN
+
+sosfiltfilt não é causal. Corte de bordas de 1 s é heurístico; PSD utiliza
+somente interior. Para 20 s, segmento útil ~18 s → bins ~3,33 BPM, sem alegar
+essa resolução como precisão. Welch pode usar só um segmento nessa configuração.
+Picos de iluminação e harmônicos dominantes ainda podem produzir estimativas
+plausíveis. Gates iniciais não são mecanismo completo de qualidade da Onda 5.
+Sem ground truth fisiológico, benchmark, validação em pessoas ou calibração clínica.
+Janelas rejeitadas preservam BPM null e motivo; não há carry-forward.
+Erro estrutural de timestamps/shape gera SignalInputError, em vez de inventar
+janela. Contagens/cobertura do trace não equivalem a métricas de acurácia.
+
+## Próxima ação — Onda 4
+
+PV-0401–PV-0408: CHROM e POS com normalização/projeções e composição temporal
+especificadas; registry, parâmetros versionados e comparação justa com GREEN.
+Consultar publicações e implementações primárias; validar mesma entrada/tempos,
+bordas e filtragem. Documentar diferenças e criar regressões numéricas.
