@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "Status": {
+      "enum": [
+        "warming_up",
+        "good",
+        "degraded",
+        "unreliable",
+        "no_face",
+        "insufficient_data",
+        "unsupported_video"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "Window": {
+      "additionalProperties": false,
+      "properties": {
+        "start_s": {
+          "minimum": 0,
+          "title": "Start S",
+          "type": "number"
+        },
+        "end_s": {
+          "minimum": 0,
+          "title": "End S",
+          "type": "number"
+        },
+        "sample_count": {
+          "minimum": 0,
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "effective_fps": {
+          "minimum": 0,
+          "title": "Effective Fps",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start_s",
+        "end_s",
+        "sample_count",
+        "effective_fps"
+      ],
+      "title": "Window",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "bpm": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Bpm"
+    },
+    "method": {
+      "enum": [
+        "GREEN",
+        "CHROM",
+        "POS"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "roi": {
+      "enum": [
+        "forehead",
+        "left_cheek",
+        "right_cheek",
+        "combined"
+      ],
+      "title": "Roi",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/Status"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "window": {
+      "$ref": "#/$defs/Window"
+    },
+    "produced_at_s": {
+      "minimum": 0,
+      "title": "Produced At S",
+      "type": "number"
+    }
+  },
+  "required": [
+    "bpm",
+    "method",
+    "roi",
+    "status",
+    "reasons",
+    "window",
+    "produced_at_s"
+  ],
+  "title": "EstimateResult",
+  "type": "object"
+}
