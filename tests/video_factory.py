@@ -1,0 +1,37 @@
+"""Original synthetic fixtures, generated only in temporary directories."""
+
+from fractions import Fraction
+from pathlib import Path
+
+import av
+import numpy as np
+
+
+def make_video(
+    path: Path,
+    pts: list[int],
+    *,
+    rotation: int = 0,
+    offset: int = 0,
+) -> Path:
+    codec = "libvpx-vp9" if path.suffix == ".webm" else "mpeg4"
+    options = {"movflags": "+faststart"} if path.suffix in {".mp4", ".mov"} else {}
+    with av.open(str(path), "w", options=options) as output:
+        stream = output.add_stream(codec, rate=25)
+        stream.width, stream.height = 64, 48
+        stream.pix_fmt = "yuv420p"
+        stream.codec_context.time_base = Fraction(1, 1000)
+        stream.time_base = Fraction(1, 1000)
+        if rotation:
+            stream.set_display_rotation(rotation)
+        for timestamp in pts:
+            pixels = np.zeros((48, 64, 3), dtype=np.uint8)
+            pixels[:] = (180, 80, 40)
+            frame = av.VideoFrame.from_ndarray(pixels, format="rgb24")
+            frame.pts = timestamp + offset
+            frame.time_base = Fraction(1, 1000)
+            for packet in stream.encode(frame):
+                output.mux(packet)
+        for packet in stream.encode():
+            output.mux(packet)
+    return path
