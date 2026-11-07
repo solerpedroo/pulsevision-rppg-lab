@@ -9,10 +9,16 @@ dependencies = [
     "numpy==2.5.4",
     "opencv-contrib-python==5.0.0.93",
     "pydantic>=2.12,<3",
+    "scipy==1.18.1",
 ]
 
 [dependency-groups]
-dev = ["pytest>=9,<10", "ruff>=0.14,<1", "mypy>=1.18,<2"]
+dev = [
+    "pytest>=9,<10",
+    "ruff>=0.14,<1",
+    "mypy>=1.18,<2",
+    "scipy-stubs>=1.18.1.1",
+]
 
 [build-system]
 requires = ["hatchling"]
