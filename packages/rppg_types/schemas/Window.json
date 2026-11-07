@@ -1,0 +1,33 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "start_s": {
+      "minimum": 0,
+      "title": "Start S",
+      "type": "number"
+    },
+    "end_s": {
+      "minimum": 0,
+      "title": "End S",
+      "type": "number"
+    },
+    "sample_count": {
+      "minimum": 0,
+      "title": "Sample Count",
+      "type": "integer"
+    },
+    "effective_fps": {
+      "minimum": 0,
+      "title": "Effective Fps",
+      "type": "number"
+    }
+  },
+  "required": [
+    "start_s",
+    "end_s",
+    "sample_count",
+    "effective_fps"
+  ],
+  "title": "Window",
+  "type": "object"
+}
