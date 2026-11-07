@@ -27,10 +27,14 @@ export interface EstimateResult {
   reasons: Reasons;
   window: Window;
   produced_at_s: ProducedAtS;
+  metadata?: Metadata;
 }
 export interface Window {
   start_s: StartS;
   end_s: EndS;
   sample_count: SampleCount;
   effective_fps: EffectiveFps;
+}
+export interface Metadata {
+  [k: string]: string | number | boolean | null;
 }
