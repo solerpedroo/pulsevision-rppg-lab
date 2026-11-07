@@ -1,0 +1,26 @@
+{
+  "sample": {
+    "timestamp_s": 0,
+    "roi": "forehead",
+    "rgb_mean": [123.4, 98.7, 87.2],
+    "valid_pixel_fraction": 0.93,
+    "landmark_status": "ok",
+    "motion_score": 0.08,
+    "quality_flags": []
+  },
+  "estimate": {
+    "schema_version": "1.0",
+    "bpm": null,
+    "method": "GREEN",
+    "roi": "forehead",
+    "status": "insufficient_data",
+    "reasons": ["window_too_short"],
+    "window": {
+      "start_s": 0,
+      "end_s": 1,
+      "sample_count": 30,
+      "effective_fps": 30
+    },
+    "produced_at_s": 1
+  }
+}
