@@ -1,0 +1,99 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "experiment_id": {
+      "minLength": 1,
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "protocol_version": {
+      "minLength": 1,
+      "title": "Protocol Version",
+      "type": "string"
+    },
+    "seed": {
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    },
+    "git_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Git Commit",
+      "type": "string"
+    },
+    "dataset_version": {
+      "minLength": 1,
+      "title": "Dataset Version",
+      "type": "string"
+    },
+    "participant_split": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Participant Split",
+      "type": "object"
+    },
+    "methods": {
+      "items": {
+        "enum": [
+          "GREEN",
+          "CHROM",
+          "POS"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Methods",
+      "type": "array"
+    },
+    "parameters": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          }
+        ]
+      },
+      "title": "Parameters",
+      "type": "object"
+    },
+    "environment": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Environment",
+      "type": "object"
+    }
+  },
+  "required": [
+    "experiment_id",
+    "protocol_version",
+    "seed",
+    "git_commit",
+    "dataset_version",
+    "participant_split",
+    "methods",
+    "parameters",
+    "environment"
+  ],
+  "title": "Experiment",
+  "type": "object"
+}
