@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 3 — GREEN/DSP offline implementado e testado em sinais sintéticos.
-Próxima onda: 4 — CHROM/POS e equivalência com referências. Não iniciada.
+Atualizado: 2026-11-07. Onda atual: 4 — GREEN/CHROM/POS offline e regressões numéricas implementados.
+Próxima onda: 5 — qualidade de sinal e política de abstenção. Não iniciada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
 ## Contexto e retomada
@@ -200,9 +200,61 @@ Janelas rejeitadas preservam BPM null e motivo; não há carry-forward.
 Erro estrutural de timestamps/shape gera SignalInputError, em vez de inventar
 janela. Contagens/cobertura do trace não equivalem a métricas de acurácia.
 
-## Próxima ação — Onda 4
+## Histórico — preparação da Onda 4
 
 PV-0401–PV-0408: CHROM e POS com normalização/projeções e composição temporal
 especificadas; registry, parâmetros versionados e comparação justa com GREEN.
 Consultar publicações e implementações primárias; validar mesma entrada/tempos,
 bordas e filtragem. Documentar diferenças e criar regressões numéricas.
+
+## Onda 4 — critérios e implementação
+
+- [x] PV-0401: CHROM com normalização local, projeções, filtragem pré-alpha e Hann/OLA.
+- [x] PV-0402: POS com projeções, normalização e overlap-add por amostra.
+- [x] PV-0403: registry imutável e MethodConfig classical-v1 versionada em JSON.
+- [x] PV-0404: comparação com mesmas entradas, ROI, janelas, banda, Welch e margem útil.
+- [x] PV-0405: comparação JSON/PNG com sinais, PSD e BPM ao longo do tempo.
+- [x] PV-0406: regressão com funções pyVHR em commit fixado, nos mesmos dados/
+      parâmetros. CHROM: projeção com harness de pré-processamento/composição alinhado;
+      POS: composição no interior comum. Não é equivalência de pipelines completos.
+- [x] PV-0407: diferenças de filtros, arredondamento e bordas em ADR 0006.
+- [x] PV-0408: regressão numérica GREEN/CHROM/POS e testes adicionais.
+- Engine generalizado em estimation/pipeline.py; import green_pipeline compatível.
+- CLI --method GREEN/CHROM/POS/all e --method-config.
+- Fontes, licença upstream e reprodução em docs/research/classical-references.md.
+
+## Evidências da Onda 4
+
+- uv run ruff check . e uv run mypy: passaram (34 arquivos fonte).
+- uv run pytest: 127 testes passaram localmente (29 novos).
+- npm run lint, npm run typecheck, npm test e npm run build: passaram (2 testes web).
+- npm run format:check e git diff --check: passaram.
+- Fixture numérica gerada executando cpu_CHROM/cpu_POS do pyVHR, commit
+  a6270f04a97f05a13d145dd0a5e8c8df48d8bd62. URL/SHA256/versões registrados;
+  testes normais rodam offline, sem instalar pyVHR ou dependências GPU.
+- Diferença máxima no interior: CHROM ~5,3e-15 e POS ~6,5e-15; tolerância
+  automatizada atol=1e-11/rtol=1e-9. GREEN usa detrend independente via polyfit.
+- Demo artificial de 90 BPM: 11 janelas aceitas por método e timestamps úteis
+  idênticos. artifacts/wave4-demo/comparison-reviewed/{comparison.json,comparison.png}.
+  PNG inspecionado e rótulos de amplitude encurtados para legibilidade.
+  Artefatos ignorados pelo Git; não são medições em pessoas.
+- CI não executada remotamente; não houve commit/push/publicação.
+
+## Limites específicos dos métodos clássicos
+
+CHROM filtra componentes antes da combinação; POS/GREEN filtram saída.
+A configuração comum não transforma essas diferenças algorítmicas em operações
+idênticas. Escalas de sinal/PSD são distintas e não medem qualidade diretamente.
+Análise individual pode usar margens diferentes; usar --method all para comparação.
+pyVHR usa floor em POS e omite primeira janela; local usa ceil e inclui a primeira.
+Equivalência da fixture POS é limitada ao interior de um caso a 30 Hz.
+Projeções degeneradas produzem abstenção/erro de qualidade explícito.
+Não há avaliação em pessoas, ground truth sincronizado, comparação causal/live
+ou conclusão sobre superioridade de método. Pendência visual de ROIs permanece.
+
+## Próxima ação — Onda 5
+
+PV-0501–PV-0508: centralizar indicadores instrumentais e reason codes;
+incorporar qualidade temporal/espectral, validade ROI e estabilidade consecutiva;
+definir abstenção, obsolescência e cobertura. Testar movimento, iluminação,
+FPS irregular, ruído e saturação; thresholds continuam heurísticos, não clínicos.
