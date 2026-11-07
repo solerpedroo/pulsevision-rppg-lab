@@ -1,0 +1,8 @@
+---
+description: Orientações globais de engenharia e continuidade do PulseVision
+alwaysApply: true
+---
+Leia AGENTS.md e state.md na raiz antes de alterar o projeto.
+Siga o plano por ondas e os ADRs em docs/adrs/.
+Atualize estado e changelog com evidências reais.
+Contratos e restrições científicas estão centralizados em AGENTS.md.
