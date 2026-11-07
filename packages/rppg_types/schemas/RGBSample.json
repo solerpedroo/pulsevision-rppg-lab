@@ -1,0 +1,69 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "timestamp_s": {
+      "minimum": 0,
+      "title": "Timestamp S",
+      "type": "number"
+    },
+    "roi": {
+      "enum": [
+        "forehead",
+        "left_cheek",
+        "right_cheek",
+        "combined"
+      ],
+      "title": "Roi",
+      "type": "string"
+    },
+    "rgb_mean": {
+      "items": {
+        "maximum": 255,
+        "minimum": 0,
+        "type": "number"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Rgb Mean",
+      "type": "array"
+    },
+    "valid_pixel_fraction": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Valid Pixel Fraction",
+      "type": "number"
+    },
+    "landmark_status": {
+      "enum": [
+        "ok",
+        "no_face",
+        "multiple_faces",
+        "unreliable"
+      ],
+      "title": "Landmark Status",
+      "type": "string"
+    },
+    "motion_score": {
+      "minimum": 0,
+      "title": "Motion Score",
+      "type": "number"
+    },
+    "quality_flags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Quality Flags",
+      "type": "array"
+    }
+  },
+  "required": [
+    "timestamp_s",
+    "roi",
+    "rgb_mean",
+    "valid_pixel_fraction",
+    "landmark_status",
+    "motion_score"
+  ],
+  "title": "RGBSample",
+  "type": "object"
+}
