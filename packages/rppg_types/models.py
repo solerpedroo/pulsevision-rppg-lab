@@ -57,6 +57,7 @@ class EstimateResult(Contract):
     reasons: list[str]
     window: Window
     produced_at_s: NonNegative
+    metadata: dict[str, str | float | int | bool | None] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def consistent(self) -> "EstimateResult":
