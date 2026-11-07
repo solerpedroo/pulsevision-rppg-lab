@@ -1,0 +1,31 @@
+name: checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.24"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run mypy
+      - run: uv run pytest
+      - run: npm ci
+      - run: uv run python scripts/export_schemas.py
+      - run: npm run contracts
+      - run: git diff --exit-code -- packages/rppg_types/schemas packages/rppg_types/generated
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
