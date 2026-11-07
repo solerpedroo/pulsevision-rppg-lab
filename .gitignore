@@ -1,0 +1,22 @@
+# Private inputs and generated artifacts (at any depth)
+data/
+uploads/
+artifacts/
+models/
+*.mp4
+*.mov
+*.webm
+*.avi
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+.next/
+coverage/
+*.tsbuildinfo
