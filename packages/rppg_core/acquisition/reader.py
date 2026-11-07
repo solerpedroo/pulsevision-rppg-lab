@@ -1,4 +1,4 @@
-from collections.abc import Iterator
+from collections.abc import Generator
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
@@ -129,7 +129,7 @@ class VideoReader:
             except (av.FFmpegError, ValueError) as exc:
                 raise VideoDecodeError("Cannot decode video metadata/first frame") from exc
 
-    def frames(self) -> Iterator[FrameSample]:
+    def frames(self) -> Generator[FrameSample, None, None]:
         with self._open() as container:
             stream = self._stream(container)
             timing = TimestampValidator()
