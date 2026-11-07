@@ -103,6 +103,29 @@
       "minimum": 0,
       "title": "Produced At S",
       "type": "number"
+    },
+    "metadata": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "title": "Metadata",
+      "type": "object"
     }
   },
   "required": [
