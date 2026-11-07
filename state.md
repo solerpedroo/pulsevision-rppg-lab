@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 1 — ingestão temporal implementada e validada localmente.
-Próxima onda: 2 — detecção facial, ROIs e extração RGB. Não iniciada.
+Atualizado: 2026-11-07. Onda atual: 2 — face/ROI/RGB implementados e testados em entradas sintéticas.
+Próxima onda: 3 — DSP e GREEN. Não iniciada. Validação visual em rostos autorizados pendente.
 
 ## Contexto e retomada
 
@@ -50,7 +50,8 @@ offline e só depois API, interface e webcam local. Não há inferência nesta e
 - Política de retenção é requisito futuro, não mecanismo implementado.
 - Schemas não exprimem validadores relacionais Pydantic; TS deve validá-los na
   futura integração. Métodos usam nomes GREEN/CHROM/POS, snake_case nos contratos.
-- Não há API, câmera, upload, modelos, dados reais ou validação de precisão.
+- Não há API, câmera, upload, dados reais ou validação de precisão. Modelo oficial
+  local disponível desde a Onda 2, fora do Git.
 - Não houve commit, push, publicação ou modificação do plano original.
 
 ## Histórico — preparação da Onda 1
@@ -97,9 +98,59 @@ não são prova de frames perdidos. Pixels mantêm orientação codificada; rota
 deve ser aplicada de forma coerente com ROIs na próxima onda. Não há seek.
 Relatório CLI acumula timeline de metadados; reader não acumula pixels.
 
-## Próxima ação — Onda 2
+## Histórico — preparação da Onda 2
 
 PV-0201–PV-0209: integrar Face Landmarker Python com modelo cuja licença seja
 verificada, definir ROIs e máscaras com orientação explícita, extrair médias RGB
 e qualidade por região, tratar ausência/múltiplas faces e testar geometria/BGR-RGB.
 Modelo não deve ser versionado sem autorização de redistribuição.
+
+## Onda 2 — critérios e implementação
+
+- [x] PV-0201: MediaPipe 1.2.2 VIDEO em CPU integrado.
+- [x] PV-0202: single_face_only=True obrigatório; detector retorna até duas faces
+      para rejeitar múltiplas detecções.
+- [x] PV-0203: polígonos roi-v1 de testa e bochechas por landmarks.
+- [x] PV-0204: máscaras, redução de bordas e exclusão geométrica de olhos,
+      sobrancelhas e boca; cabelo/oclusores sem segmentação semântica.
+- [x] PV-0205: médias RGB e estatísticas por ROI; combined ponderado por pixels.
+- [x] PV-0206: flags de brilho, saturação, pixels válidos, movimento e escala.
+- [x] PV-0207: ausência/múltiplas faces, perda de tracking e lacunas sem RGB falso.
+- [x] PV-0208: CLI CSV e metadados, sem salvar frames ou previews.
+- [x] PV-0209: testes de geometria, máscaras, orientação, BGR/RGB e pipeline.
+- [ ] Inspecionar geometria em rostos autorizados e condições variadas antes de
+      alegar robustez real. Não há material de rosto autorizado nesta sessão.
+
+## Evidências da Onda 2
+
+- uv sync --locked: passou, com MediaPipe 1.2.2/OpenCV contrib 5.0.0.93 pinados.
+- Modelo oficial float16/1 baixado em models/, SHA256 verificado por script.
+  git check-ignore confirmou que pesos não serão versionados.
+- uv run ruff check . e uv run mypy: passaram, 16 fontes tipadas.
+- uv run pytest: 54 testes passaram localmente, incluindo modelo real sem rosto.
+  Na CI sem pesos, o teste de smoke do modelo real é pulado; demais são offline.
+- Testes positivos de landmarks/ROIs usam geometria sintética e detector injetado.
+  Não são evidência de detecção positiva/precisão em rostos reais.
+- Teste local real cobre imagem vazia, vídeo sintético sem face e exportação de
+  rejeições, além de erro de colisão de timestamps em milissegundos.
+- npm run lint, npm run typecheck, npm test e npm run build: passaram, 2 testes web.
+- npm run format:check e git diff --check: passaram.
+- Fontes/licenças e checksum em docs/research/face-model.md; ADR 0004 explica
+  arquitetura, thresholds, privacidade e limites. CI não executada remotamente.
+
+## Limitações da Onda 2
+
+Geometria é heurística e não segmenta cabelos, mãos ou demais oclusores de forma
+geral. Pode haver detecções persistentes/espúrias e troca de pessoa sem identificação.
+Gates instrumentais iniciais não substituem qualidade temporal/espectral da Onda 5.
+Bundle não é redistribuído. Sem auto-download na importação, CI ou inferência.
+Não há preview com rosto nem medição de BPM. Metadados e CSV devem ser consumidos
+como par; não há transação entre arquivos resistente a interrupção abrupta.
+
+## Próxima ação — Onda 3
+
+PV-0301–PV-0308: traços RGB → resampling com lacunas explícitas → normalização/
+detrending → GREEN → filtro estável → Welch/FFT → BPM ou abstenção.
+Usar sinais sintéticos com frequência conhecida e tolerância ligada à resolução
+temporal; rejeitar sinais constantes, NaNs, dados curtos e timestamps inválidos.
+Não apresentar esses testes como validação clínica ou avaliação em dataset real.
