@@ -6,8 +6,8 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–2: fundação, ingestão temporal e extração RGB por ROI facial. Ainda não há câmera, upload,
-algoritmos rPPG ou resultados de BPM.
+Ondas 0–3: fundação, ingestão temporal, ROIs/RGB e baseline GREEN offline. Ainda não há câmera, upload,
+CHROM/POS ou validação em pessoas. GREEN já estima periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
 A evolução segue: ingestão temporal → ROI/RGB → GREEN → CHROM/POS → qualidade →
@@ -85,5 +85,17 @@ uv run python -m rppg_core.roi.extract_rgb /caminho/video.mp4 \
 Veja [uso e limites](docs/architecture/face-roi.md) e o
 [registro do modelo](docs/research/face-model.md). Pesos ficam fora do Git.
 Sem face ou ROI confiável, o CSV registra rejeição com RGB vazio.
-Não há BPM nesta onda; a geometria em rostos reais ainda requer validação visual
+A geometria em rostos reais ainda requer validação visual
 com material autorizado.
+
+## GREEN e análise espectral
+
+```bash
+uv run python -m rppg_core.signals.synthetic \
+  --output artifacts/green-demo/rgb_synthetic.csv --bpm 90
+uv run python -m rppg_core.signals.analyze_rgb artifacts/green-demo/rgb_synthetic.csv \
+  --output artifacts/green-demo/analysis
+```
+
+Gera estimativas ou abstenções em JSON e diagnóstico PNG. A demonstração é
+artificial, sem rosto ou fisiologia real. Veja [especificação e uso](docs/architecture/green-dsp.md).
