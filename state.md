@@ -1,7 +1,8 @@
 # Estado do projeto
 
-Atualizado: 2026-11-08. Onda atual: 10 — Benchmark Lab/estudos/relatórios implementados; avaliação real pendente.
-Próxima onda de engenharia: 11 — polish e apresentação, preservando pendências científicas das Ondas 6/10.
+Atualizado: 2026-11-08. Onda atual: 11 — engenharia e preparação local v1.0.0 concluídas.
+As ondas de engenharia do plano terminaram; avaliação científica das Ondas 6/10 permanece pendente.
+Não há release remota, deploy, tag ou publicação autorizada.
 Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
@@ -48,9 +49,8 @@ validação fisiológica em pessoas nem dataset autorizado local.
 
 ## Limitações e decisões abertas
 
-- npm audit completo: oito alertas moderados transitivos via minimatch na cadeia
-  typescript-eslint/eslint-config-next (GHSA-g3hv-75wg-m249). Não aplicar downgrade
-  major sugerido automaticamente. Reavaliar atualização compatível do fornecedor.
+- Os oito alertas npm históricos de minimatch foram resolvidos na Onda 11 com
+  override transitivo restrito para 11.0.1. Auditoria completa final: zero alertas.
 - skipLibCheck segue configuração comum do Next: há incompatibilidade de tipos
   URLPattern entre declarações de dependências; código próprio continua strict.
 - Retenção/exclusão inicialmente planejadas foram implementadas na Onda 7;
@@ -678,3 +678,89 @@ Preservar rótulos artificiais e pendências PV-0610/PV-1004–PV-1008/PV-1010; 
 portfólio como validação fisiológica concluída. Release/deploy não foram autorizados.
 Para fechar a parte científica, obter dados autorizados, registrar termos/alinhamento,
 congelar protocolo e executar avaliação real antes de redigir conclusões finais.
+
+## Onda 11 — polish e preparação local v1.0.0
+
+Escopo PV-1101–PV-1109. Dependência de engenharia Onda 10 atendida;
+validação fisiológica não foi pré-condição presumida nem declarada concluída.
+Git estava limpo no início; alterações anteriores foram preservadas.
+
+- [x] PV-1101: navegação compartilhada com versão experimental, contraste/foco,
+      controles responsivos e escala de sinais pequenos sem preencher lacunas/null.
+- [x] PV-1102: regressões de escala/NaN, headers de rejeição, origens locais,
+      metadados de versão, credenciais e staging de modelo; cobertura por risco registrada.
+- [x] PV-1103: npm/pip-audit completos e revisão do boundary de uploads;
+      override minimatch 11.0.1 sem downgrade Next, headers web/API reforçados.
+- [x] PV-1104: Compose local opcional, API com worker supervisionado, chave obrigatória,
+      volumes dedicados, portas loopback, modelo verificado montado somente leitura,
+      serviços non-root/read-only e limites. Imagens construídas e fluxo real testado.
+- [x] PV-1105: guia Linux/Fedora, permissões de câmera, portas alternativas, setup,
+      assets, retenção, encerramento e particularidades do Podman/SELinux.
+- [x] PV-1106: README inglês, resumo/guia português e screenshots artificiais
+      preparados no repositório. Publicação externa não realizada nem autorizada.
+- [x] PV-1107: docs/research/report.md com métodos, bibliografia e limites explícitos.
+      Não substitui a conclusão científica pendente de PV-1010.
+- [x] PV-1108: demo WebM curta gravada apenas da página automatizada com estudo
+      artificial, sem desktop ou câmera física. Artefato local ignorado pelo Git.
+- [x] PV-1109: VERSION/metadata Python/npm/API/UI em 1.0.0, changelog e dossiê local.
+      Nenhum tag, commit, push, registry push, deploy ou release remota.
+- ADR 0013 registra decisões de release local, isolamento, privacidade e limitações.
+
+## Evidências da Onda 11
+
+- uv run ruff check .: passou; uv run mypy: passou, 69 fontes.
+- uv run pytest com --cov/--cov-branch: 240 testes passaram em 69,62 s.
+  Cobertura combinada linhas/branches 82,78% (exibida 83%); linhas 84,36%,
+  branches 76,83%. JSON em artifacts/wave11-coverage.json.
+  API main 93,3%, jobs 90,0%, ROI pipeline 95,6%, qualidade 94,5%, temporal 96,4%.
+  Worker subprocesso aparece com 0% por falta de instrumentação no filho;
+  integração nativa real foi executada. Não se alega cobertura total do worker.
+- npm run lint, npm run typecheck e npm test: passaram, 31 testes web.
+- NEXT_TELEMETRY_DISABLED=1 npm run build: passou; três Labs e output standalone.
+- npm run test:e2e: 12 cenários passaram, com API real e câmera artificial;
+  axe nas três páginas iniciais sem violações dos conjuntos WCAG 2 A/AA e 2.1 A/AA.
+  Após último ajuste visual da navegação, os três checks axe passaram novamente.
+  Isso não é certificação completa de acessibilidade ou teste manual assistivo.
+- npm audit completo: zero vulnerabilidades conhecidas. pip-audit do ambiente:
+  zero vulnerabilidades conhecidas nas distribuições publicadas; pacote local
+  pulsevision-rppg-lab é explicitamente ignorado pela base. JSONs em artifacts/.
+- Build de ambas as imagens com Podman rootless 5.8.9; Compose provider 1.6.0.
+  Foi necessário incluir libgles2: o teste de upload detectou a ausência nativa.
+  Imagens finais: API 6c703cb112e8, web 905d66954850.
+  Projeto de QA separado pulsevision-wave11qa, portas host 3100/8100 loopback.
+  Health, web/headers, hash do modelo servido, chave ausente→401, origem,
+  upload MP4 artificial→worker nativo→BPM null→resultados→DELETE passaram.
+  Ambos os serviços healthy; projeto/volume exclusivos de QA removidos após teste.
+  Registro artifacts/wave11-container-qa.json; nenhum segredo nos logs de QA.
+  Docker daemon não foi testado; não declarar equivalência operacional comprovada.
+- npm run demo: estudo novo do runner e gravação Chromium contra build de produção;
+  sem captura de desktop ou webcam física. docs/release/demo.md registra saída.
+  Screenshots desktop revisados; E2E mobile 390×844 sem overflow horizontal.
+  Nenhum rosto ou dado humano.
+- npm run format:check e git diff --check passaram; contratos científicos não mudaram,
+  logo não houve edição/regeneração de schemas nesta onda.
+- CI atualizada para auditorias e cobertura com artefato; não executada remotamente.
+
+## Incidentes e limites da verificação final
+
+As portas 3000/8000 pertenciam a outro projeto e não foram interrompidas. Testes
+usaram portas alternativas com origens explícitas; nenhuma liberação genérica de CORS.
+A primeira execução axe encontrou contraste e label/name incompatíveis, corrigidos.
+Uma tentativa de demo concorrente com Next dev encontrou seu lock; o script final
+usa o servidor de produção próprio e gravação concluída. Podman Compose rejeitou
+uid/gid no tmpfs; a montagem isolada usa mode=1777. Esses caminhos foram retestados.
+
+O teste nativo de expiração falhou uma vez durante execuções concorrentes (job failed,
+sem detalhe nativo exposto); passou isoladamente e na suíte integral final. Não foi
+estabelecida uma causa para essa intermitência; ela não foi mascarada com retry no teste.
+O worker continua omitindo stderr nativo por privacidade. Zero alertas em auditoria
+não comprova ausência de falhas em código próprio ou futuras vulnerabilidades.
+
+## Retomada após Onda 11
+
+Não inventar Onda 12: o plano original encerra as ondas de engenharia em 11.
+A próxima entrega científica depende de dados autorizados e evidência de alinhamento,
+que o usuário informou não possuir. Permanecem PV-0610, PV-1004–PV-1008, conclusão
+científica de PV-1010, inspeção positiva de ROIs e testes em dispositivos físicos.
+Obter acesso autorizado antes de congelar/rodar avaliação; não baixar datasets ou
+contatar mantenedores por inferência. Publicação externa continua fora do escopo.
