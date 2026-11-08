@@ -6,9 +6,9 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–5 implementadas; infraestrutura da Onda 6 disponível.
-Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. Ainda não há câmera, upload,
-validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
+Ondas 0–5 e 7 implementadas; infraestrutura da Onda 6 disponível.
+Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. A interface web ainda não captura câmera nem envia vídeo; a API aceita uploads explícitos.
+Não há validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
 A evolução segue: ingestão temporal → ROI/RGB → GREEN → CHROM/POS → qualidade →
@@ -28,7 +28,7 @@ npm ci
 npm run dev --workspace apps/web
 ```
 
-Abra http://localhost:3000. Não há servidor de API nesta onda.
+Abra http://localhost:3000. A API é iniciada separadamente pelo comando da seção Onda 7.
 Configuração de câmera, CUDA e datasets não é necessária.
 
 ## Verificação
@@ -57,7 +57,7 @@ validações relacionais em runtime; consulte a arquitetura.
 ## Estrutura e colaboração
 
 apps/web contém Next.js; packages/rppg_core o núcleo científico;
-packages/rppg_types os contratos; services/api a reserva da futura API;
+packages/rppg_types os contratos; services/api a API local com jobs;
 benchmarks o protocolo/configuração; docs decisões e políticas.
 AGENTS.md orienta agentes; CLAUDE.md e .cursor/rules/ apontam para a mesma fonte.
 Registre progresso em state.md, mudanças em CHANGELOG.md e decisões em docs/adrs/.
@@ -140,3 +140,15 @@ Essa demonstração é artificial. O runner gera métricas por participante, exc
 coverage e gráficos, e recusa configuração alterada ou alinhamento não verificado.
 Veja [protocolo operacional](docs/evaluation/benchmark-v1.md) e
 [acesso aos datasets](docs/research/dataset-access.md).
+
+## API local de vídeo (Onda 7)
+
+```bash
+uv run python scripts/fetch_face_model.py
+uv run uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-access-log
+```
+
+Upload binário, jobs assíncronos, progresso, cancelamento, séries paginadas,
+exportação e exclusão. Originais são removidos no término; derivados expiram em 24 h.
+Veja [contrato e setup](docs/architecture/video-api.md) e
+[política de privacidade](docs/privacy/policy.md). UI de Video Lab fica para a Onda 8.
