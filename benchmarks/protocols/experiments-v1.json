@@ -1,0 +1,88 @@
+{
+  "version": "experiments-v1-draft",
+  "status": "real_data_pending_not_final_test",
+  "common": {
+    "methods": ["GREEN", "CHROM", "POS"],
+    "seed": 42,
+    "quality_version": "quality-v1",
+    "primary_unit": "participant",
+    "required": [
+      "authorized_access_record",
+      "participant_disjoint_splits",
+      "externally_verified_reference_alignment",
+      "predeclared_variants",
+      "frozen_code_inputs_configurations",
+      "coverage_and_exclusions_with_errors"
+    ],
+    "never": [
+      "optimize_offset_on_estimation_error",
+      "select_winner_ignoring_abstentions",
+      "call_compute_cost_sensor_latency",
+      "use_artificial_ROI_as_anatomical_evidence"
+    ]
+  },
+  "experiments": [
+    {
+      "id": "A",
+      "question": "How do GREEN, CHROM and POS compare on identical sessions and common spectral support?",
+      "vary": "method",
+      "fix": ["cohort", "ROI", "window", "reference_support", "quality_policy"],
+      "real_execution": "pending"
+    },
+    {
+      "id": "B",
+      "question": "How do forehead, left/right cheek and combined regions compare?",
+      "vary": "roi",
+      "levels": ["forehead", "left_cheek", "right_cheek", "combined"],
+      "required": [
+        "actual_extraction_per_ROI",
+        "authorized_visual_geometry_review",
+        "same_sessions_and_reference"
+      ],
+      "real_execution": "pending"
+    },
+    {
+      "id": "C",
+      "question": "What is the tradeoff between window length, conditional error and coverage?",
+      "vary": "window_s",
+      "levels": [10, 20, 30],
+      "required": [
+        "same_cohort",
+        "source_time_to_first_accepted_result_or_unavailable",
+        "compute_cost_separate_from_sensor_to_display_latency",
+        "explicit_changed_spectral_resolution_and_reference_support"
+      ],
+      "real_execution": "pending"
+    },
+    {
+      "id": "D",
+      "question": "How do controlled noise, blur, illumination changes and compression affect results?",
+      "vary": "verified_video_transformation",
+      "required": [
+        "original_and_transformed_hashes",
+        "seed_and_transform_parameters",
+        "verified_codec_resolution_and_PTS",
+        "separate_RGB_proxy_from_pixel_experiment",
+        "same_physical_reference_clock"
+      ],
+      "real_execution": "pending"
+    },
+    {
+      "id": "E",
+      "question": "How do motion, sampling cadence and missing frames affect abstention and error?",
+      "vary": "acquisition_condition",
+      "required": [
+        "authorized_motion_recordings_or_explicitly_artificial_proxy",
+        "preserved_PTS_when_dropping_frames",
+        "no_frame_index_clock_substitution",
+        "recorded_drop_pattern_and_seed",
+        "same_physical_reference_support"
+      ],
+      "real_execution": "pending"
+    }
+  ],
+  "limitations": [
+    "This document is a draft design, not a completed experiment or independent preregistration.",
+    "Real comparison and final scientific conclusions require authorized datasets and frozen protocols."
+  ]
+}
