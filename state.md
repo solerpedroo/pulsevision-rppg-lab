@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 4 — GREEN/CHROM/POS offline e regressões numéricas implementados.
-Próxima onda: 5 — qualidade de sinal e política de abstenção. Não iniciada.
+Atualizado: 2026-11-07. Onda atual: 5 — qualidade instrumental, abstenção e continuidade implementadas.
+Próxima onda: 6 — datasets autorizados, ground truth e benchmark científico. Não iniciada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
 ## Contexto e retomada
@@ -252,9 +252,69 @@ Projeções degeneradas produzem abstenção/erro de qualidade explícito.
 Não há avaliação em pessoas, ground truth sincronizado, comparação causal/live
 ou conclusão sobre superioridade de método. Pendência visual de ROIs permanece.
 
-## Próxima ação — Onda 5
+## Histórico — preparação da Onda 5
 
 PV-0501–PV-0508: centralizar indicadores instrumentais e reason codes;
 incorporar qualidade temporal/espectral, validade ROI e estabilidade consecutiva;
 definir abstenção, obsolescência e cobertura. Testar movimento, iluminação,
 FPS irregular, ruído e saturação; thresholds continuam heurísticos, não clínicos.
+
+## Onda 5 — critérios e implementação
+
+- [x] PV-0501: evidências de face/ROI e métricas opcionais preservadas pelo CSV.
+- [x] PV-0502: gates de movimento, iluminação, cobertura temporal, irregularidade,
+      energia em banda e estrutura do pico centralizados em SignalQualityService.
+- [x] PV-0503: catálogo ReasonCode, estados e QualityAssessment por resultado.
+- [x] PV-0504: configs/quality/quality-v1.json com thresholds heurísticos versionados;
+      parâmetros de pico herdados continuam em SignalConfig por compatibilidade.
+- [x] PV-0505: confirmação entre janelas após salto/recuperação, sem suavização.
+- [x] PV-0506: display_estimate suprime resultado vencido e retorna cópia datada.
+- [x] PV-0507: testes de adversidades, fonte CSV, continuidade e vencimento.
+- [x] PV-0508: summarize_quality conta aceitas, abstenções, cobertura, status e
+      motivos; integrado aos exports e reutilizável pelo futuro runner de benchmark.
+- O runner/dataset com referência ainda pertence à Onda 6; nenhuma execução
+  fisiológica ou métrica de erro é alegada nesta entrega.
+- ADR 0007, contrato de uso e política experimental de avaliação adicionados.
+- EstimateResult.quality é opcional e aditivo; Pydantic valida concordância
+  entre passed e disponibilidade de BPM. Schemas/TS regenerados.
+
+## Evidências da Onda 5
+
+- uv run ruff check . e uv run mypy: passaram (40 arquivos fonte).
+- uv run pytest: 174 testes passaram localmente; 47 novos testes de qualidade.
+- npm run lint, npm run typecheck, npm test e npm run build: passaram (2 testes web).
+- Exportação de schemas e npm run contracts executados.
+- npm run format:check e git diff --check: passaram.
+- Demo artificial: artifacts/wave5-demo/rgb_synthetic_quality.csv, com 45 s de
+  pulso RGB sintético e evento de movimento simulado em [20,20.2) s.
+  Relatório/PNG em artifacts/wave5-demo/comparison-reviewed/.
+  Por método: 26 janelas, 5 aceitas, 20 rejeições por movimento e 1 recuperação;
+  coverage=5/26. Gráfico preserva lacunas; não interpola BPM durante rejeição.
+  Inspeção visual motivou escala de BPM sem offset científico em sinais constantes.
+- Artefatos e indicadores dessa demo são artificiais e ignorados pelo Git.
+- CI não executada remotamente. Sem commit, push ou publicação.
+
+## Limites específicos de qualidade
+
+Gates são instrumentais iniciais e não representam confiança clínica calibrada.
+Uma amostra rejeitada bloqueia toda a janela, reduzindo cobertura. Confirmação
+pode suprimir mudanças fisiológicas reais; janelas sobrepostas não são independentes.
+Energia do G antes do filtro pode rejeitar dados que CHROM/POS recuperariam.
+Média RGB é proxy de brilho quando faltam estatísticas; não prova qualidade
+facial/presença de pele. Ausência de evidência fica registrada em warnings.
+Flicker/movimento periódicos de baixa amplitude ainda podem gerar BPM plausível.
+display_estimate usa tempo da sessão e o resultado mais recente, inclusive ruim;
+não procurar o último resultado bom. analyze_window é stateless; analyze_trace
+coordena continuidade. max_history_gap_s deve ser >= stride_s.
+Elegibilidade das estatísticas atuais é o agendamento do trace; critérios prévios
+de exclusão de dataset/ground truth serão definidos no runner da Onda 6.
+Pendência de inspeção visual das ROIs em rostos autorizados continua aberta.
+
+## Próxima ação — Onda 6
+
+PV-0601–PV-0612: verificar acesso/licença de UBFC-rPPG e, se autorizado, PURE;
+adapters de vídeo/referência com alinhamento temporal verificável; split por
+participante, manifesto/protocolo congelados antes do teste final.
+Implementar métricas MAE/RMSE/MedAE/bias/correlação, cobertura e exclusões,
+agregação por participante e relatórios reproduzíveis. Não inventar dados,
+autorizações, alinhamento ou resultados se o dataset ainda não estiver disponível.
