@@ -1,37 +1,72 @@
 # PulseVision — rPPG Lab
 
-Laboratório experimental para estimar frequência cardíaca por variações de cor
-facial, com resultados rastreáveis e abstenção quando o sinal for insuficiente.
-**Uso experimental; não é dispositivo médico.**
+Experimental, local-first tools for inspecting facial colour traces and estimating
+pulse periodicity with GREEN, CHROM and POS. Insufficient evidence produces an
+explicit abstention, with its reason and time window preserved.
 
-## Estado
+**v1.0.0 is a local engineering milestone. No human accuracy or clinical validation
+has been demonstrated. Authorized dataset evaluation is still pending.**
 
-Ondas 0–5 e 7–9 implementadas; infraestrutura das Ondas 6/10 e Benchmark Lab disponíveis.
-Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. O Video Lab permite uploads explícitos; o Live Lab processa webcam localmente no navegador.
-Não há validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
-Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
-[protocolo](docs/evaluation/protocol-v1.md) e o plano original.
-A evolução segue: ingestão temporal → ROI/RGB → GREEN → CHROM/POS → qualidade →
-benchmark → API → interface e webcam.
+[Português](README.pt-BR.md) · [Linux setup](docs/release/linux.md) ·
+[Research report](docs/research/report.md) · [Release notes](docs/release/v1.0.0.md)
 
-## Setup Fedora/Linux
+## Try it locally
 
-Requisitos: Git, uv 0.12.24 e Node 24 com npm. Python 3.12 é gerenciado pelo uv;
-não substitua o Python do sistema. PyAV inclui bibliotecas FFmpeg no wheel; o executável ffmpeg não é exigido
-para ingestão e fixtures desta onda.
-Execute da raiz:
+Requirements: Linux, uv 0.12.24, Node.js 24 and npm. uv manages Python 3.12 separately
+from the system Python. Run from this repository:
 
 ```bash
 uv python install 3.12
 uv sync --locked
 npm ci
-npm run dev --workspace apps/web
+# Explicit downloads of verified model/runtime assets:
+uv run python scripts/fetch_face_model.py
+npm run live:assets
 ```
 
-Abra http://localhost:3000. A API é iniciada separadamente pelo comando da seção Onda 7.
-Configuração de câmera, CUDA e datasets não é necessária.
+In separate terminals:
 
-## Verificação
+```bash
+uv run uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 --workers 1
+```
+
+```bash
+npm run dev -w apps/web
+```
+
+Open http://localhost:3000. Video Lab previews locally and uploads only after
+explicit authorization. Live Lab starts the camera on request and processes frames
+in a browser worker without transmitting them. Benchmark Lab imports offline JSON
+locally. A camera is optional. Model weights are not bundled in Git or container images.
+
+Optional isolated containers, alternate ports, camera permissions, retention and
+shutdown are explained in the [Linux guide](docs/release/linux.md).
+
+## Synthetic demonstration
+
+```bash
+uv run python -m benchmarks.study demo --output artifacts/my-synthetic-study
+```
+
+Import `artifacts/my-synthetic-study/results/review/benchmark-review-v1.json` in
+`/benchmark`. This runs the actual offline pipeline on artificial RGB/reference
+signals; its numbers do not estimate human accuracy. Existing output is never overwritten.
+For an automated, face-free recording: `npm run demo` (see [demo notes](docs/release/demo.md)).
+
+![Benchmark Lab showing explicitly artificial results](docs/assets/benchmark-synthetic.png)
+
+![Video Lab with an original face-free synthetic input](docs/assets/video-synthetic.png)
+
+## Structure
+
+- `packages/rppg_core`: acquisition with real PTS, ROIs, RGB, DSP and quality gates.
+- `packages/rppg_types`: Pydantic contracts, JSON Schema and generated TypeScript.
+- `services/api`: local FastAPI jobs with one supervised subprocess and bounded storage.
+- `apps/web`: Next.js Video, Live and Benchmark Labs.
+- `benchmarks`: access records, frozen protocols, adapters, evaluation and reports.
+- `docs/adrs`: durable decisions. `AGENTS.md`, `state.md` and `CHANGELOG.md` guide work.
+
+## Verification
 
 ```bash
 uv run ruff check .
@@ -42,140 +77,26 @@ npm run lint
 npm run typecheck
 npm test
 NEXT_TELEMETRY_DISABLED=1 npm run build
+npx playwright install chromium
+npm run test:e2e
 ```
 
-Ao alterar contratos:
+Regenerate contracts after changing models with `uv run python scripts/export_schemas.py`
+and `npm run contracts`; do not edit generated files. Browser tests prepare verified
+local assets explicitly and use an artificial camera, never a physical webcam.
 
-```bash
-uv run python scripts/export_schemas.py
-npm run contracts
-```
+## Limits and responsible use
 
-Versione modelos, schemas e tipos gerados juntos. JSON Schema/TS não substituem
-validações relacionais em runtime; consulte a arquitetura.
+No diagnosis, clinical ranges, SpO2 or facial identification. No authorized UBFC/PURE
+copy is available here; protocol execution, positive ROI inspection on authorized
+faces, real camera/mobile tests and external validation remain pending. Sampling,
+motion, lighting, compression, skin appearance and reference alignment can affect
+results. Error must be interpreted alongside coverage and abstention.
 
-## Estrutura e colaboração
-
-apps/web contém Next.js; packages/rppg_core o núcleo científico;
-packages/rppg_types os contratos; services/api a API local com jobs;
-benchmarks o protocolo/configuração; docs decisões e políticas.
-AGENTS.md orienta agentes; CLAUDE.md e .cursor/rules/ apontam para a mesma fonte.
-Registre progresso em state.md, mudanças em CHANGELOG.md e decisões em docs/adrs/.
-Dados privados e vídeos ficam fora do Git. Leia a política em docs/privacy/policy.md.
-Código MIT; datasets e modelos seguem seus próprios termos.
-
-## Inspeção de vídeo
-
-```bash
-uv run python -m rppg_core.acquisition.inspect_video /caminho/video.mp4
-uv run pytest tests/test_acquisition.py
-```
-
-A CLI apresenta metadados e timeline com PTS reais em JSON. Suporte testado:
-MP4/MOV com MPEG-4 e WebM com VP9. Veja
-[contratos e limites da aquisição](docs/architecture/acquisition.md).
-
-## Extração de RGB por região facial
-
-```bash
-uv run python scripts/fetch_face_model.py
-uv run python -m rppg_core.roi.extract_rgb /caminho/video.mp4 \
-  --model models/face_landmarker.task --output artifacts/sessao/rgb_traces.csv
-```
-
-Veja [uso e limites](docs/architecture/face-roi.md) e o
-[registro do modelo](docs/research/face-model.md). Pesos ficam fora do Git.
-Sem face ou ROI confiável, o CSV registra rejeição com RGB vazio.
-A geometria em rostos reais ainda requer validação visual
-com material autorizado.
-
-## GREEN e análise espectral
-
-```bash
-uv run python -m rppg_core.signals.synthetic \
-  --output artifacts/green-demo/rgb_synthetic.csv --bpm 90
-uv run python -m rppg_core.signals.analyze_rgb artifacts/green-demo/rgb_synthetic.csv \
-  --output artifacts/green-demo/analysis
-```
-
-Gera estimativas ou abstenções em JSON e diagnóstico PNG. A demonstração é
-artificial, sem rosto ou fisiologia real. Veja [especificação e uso](docs/architecture/green-dsp.md).
-
-## Comparar GREEN, CHROM e POS
-
-```bash
-uv run python -m rppg_core.signals.analyze_rgb artifacts/green-demo/rgb_synthetic.csv \
-  --method all --method-config configs/methods/classical-v1.json \
-  --output artifacts/classical-comparison
-```
-
-JSON e PNG com suporte temporal comum, sinais, PSD e BPM por janela.
-Referências numéricas e limites em
-[docs/architecture/classical-methods.md](docs/architecture/classical-methods.md).
-
-## Qualidade, abstenção e cobertura
-
-```bash
-uv run python -m rppg_core.signals.analyze_rgb artifacts/sessao/rgb_traces.csv \
-  --method all --quality-config configs/quality/quality-v1.json \
-  --output artifacts/sessao/quality
-```
-
-Relatórios preservam causas de rejeição, confirmação entre janelas e cobertura.
-O helper de exibição suprime estimativas vencidas, sem carregar BPM anterior.
-Veja [contrato e uso](docs/architecture/signal-quality.md) e
-[política experimental](docs/evaluation/quality-policy-v1.md).
-
-## Benchmark e referência temporal
-
-```bash
-uv run python -m benchmarks.runners.synthetic --output artifacts/benchmark-demo/inputs
-uv run python -m benchmarks.runners.run freeze artifacts/benchmark-demo/inputs/manifest.json \
-  --output artifacts/benchmark-demo/lock.json
-uv run python -m benchmarks.runners.run run artifacts/benchmark-demo/inputs/manifest.json \
-  --lock artifacts/benchmark-demo/lock.json --output artifacts/benchmark-demo/results
-```
-
-Essa demonstração é artificial. O runner gera métricas por participante, exclusões,
-coverage e gráficos, e recusa configuração alterada ou alinhamento não verificado.
-Veja [protocolo operacional](docs/evaluation/benchmark-v1.md) e
-[acesso aos datasets](docs/research/dataset-access.md).
-
-## API local de vídeo (Onda 7)
-
-```bash
-uv run python scripts/fetch_face_model.py
-uv run uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 --workers 1 --no-access-log
-```
-
-Upload binário, jobs assíncronos, progresso, cancelamento, séries paginadas,
-exportação e exclusão. Originais são removidos no término; derivados expiram em 24 h.
-Veja [contrato e setup](docs/architecture/video-api.md) e
-[política de privacidade](docs/privacy/policy.md). A interface está disponível em `/video`; veja [uso do Video Lab](docs/architecture/video-lab.md).
-
-## Webcam local (Onda 9)
-
-```bash
-npm run live:assets
-npm run dev -w apps/web
-```
-
-Abra http://localhost:3000/live. Requer o modelo local já verificado pelo script
-acima. A câmera começa por ação explícita; frames não são enviados ao backend.
-GREEN/POS/CHROM analisam janela passada de 20 s com qualidade e abstenção.
-Stop libera tracks, encerra worker e descarta séries. Exporte derivados antes de parar.
-Veja [operação e limites do Live Lab](docs/architecture/live-lab.md).
-
-## Benchmark Lab e estudos offline (Onda 10)
-
-```bash
-uv run python -m benchmarks.study demo --output artifacts/study-demo
-npm run dev -w apps/web
-```
-
-Abra http://localhost:3000/benchmark e selecione o JSON em
-`artifacts/study-demo/results/review/benchmark-review-v1.json`.
-Demonstração artificial de janelas 10/20/30 s, sem validação em pessoas.
-A revisão é local, sem upload. Estudos congelados geram JSON/Markdown/PNG;
-[guia do Benchmark Lab](docs/architecture/benchmark-lab.md).
-Experimentos A–E reais e relatório científico final aguardam dados autorizados.
+Uploads stay in a dedicated local store: source videos are deleted at terminal job
+states; derived outputs expire after 24 hours by default. Explicit deletion is also
+available. Downloads and imported source files remain under the user's control.
+Do not expose this research service to the internet or share its API key.
+See the [privacy policy](docs/privacy/policy.md), [security review](docs/security/wave11.md),
+[dataset access record](docs/research/dataset-access.md) and [MIT license](LICENSE).
+Dataset/model rights are separate from the software license.
