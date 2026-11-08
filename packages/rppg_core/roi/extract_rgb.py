@@ -35,7 +35,9 @@ FIELDS = [
 ]
 
 
-def export_csv(video: Path, model: Path, output: Path) -> dict[str, Any]:
+def export_csv(
+    video: Path, model: Path, output: Path, *, reader: VideoReader | None = None
+) -> dict[str, Any]:
     if output.exists() or output.with_suffix(".metadata.json").exists():
         raise ValueError("Output or metadata file already exists")
     if {output.resolve(), output.with_suffix(".metadata.json").resolve()} & {
@@ -52,7 +54,7 @@ def export_csv(video: Path, model: Path, output: Path) -> dict[str, Any]:
             writer = csv.DictWriter(handle, fieldnames=FIELDS)
             writer.writeheader()
             with MediaPipeDetector(model) as detector:
-                for row in RGBExtractor(detector, config).extract(VideoReader(video)):
+                for row in RGBExtractor(detector, config).extract(reader or VideoReader(video)):
                     means = row.sample.rgb_mean if row.sample else ["", "", ""]
                     stats = row.stats
                     writer.writerow(
