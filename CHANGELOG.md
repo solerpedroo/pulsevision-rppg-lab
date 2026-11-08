@@ -2,6 +2,17 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 5 — 2026-11-07
+
+- PV-0501–PV-0508: SignalQualityService com evidências faciais, fotométricas,
+  temporais e espectrais, sem score de confiança clínica.
+- Configuração quality-v1, catálogo de motivos e auditoria QualityAssessment.
+- CSV preserva estatísticas e causas específicas; flags desconhecidas são rejeitadas.
+- Confirmação de mudanças/recuperação entre janelas e supressão de resultados vencidos.
+- Cobertura e contagem de abstenções/status/motivos nos exports e helper reutilizável.
+- Testes adversos sintéticos e de integração; contratos/schemas/TS atualizados.
+- ADR 0007 e política de avaliação; sem benchmark fisiológico nesta onda.
+
 ## Não lançado — Onda 4 — 2026-11-07
 
 - PV-0401–PV-0408: CHROM/POS com janelas internas, overlap-add e suporte explícito.
