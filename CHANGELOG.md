@@ -2,6 +2,20 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 9 — 2026-11-08
+
+- PV-0901–PV-0913: Live Lab em `/live`, câmera explícita, seleção e Stop com descarte.
+- MediaPipe JS 1.2.2 em worker local, assets verificados/preparados sem CDN.
+- ROIs/RGB e indicadores por frame, timestamps de mídia, buffers limitados e backpressure.
+- GREEN/POS/CHROM em janela passada, SOS/Welch, qualidade, continuidade e freshness.
+- Regressões Python/TS compartilhadas para nove casos artificiais com tolerância 1e-9.
+- Preview/overlay espelhados em conjunto, estados, cadência medida, sinal e PSD.
+- Exportação voluntária de derivados; testes de rede sem upload de frames.
+- Ciclo de vida cobre Stop, permissão tardia/negada, foco/visibilidade, seleção,
+  track ended, navegação e refresh; sem captura física nos testes.
+- Corrigido bloqueio de import opcional de áudio no worker de vídeo, com regressão real.
+- ADR 0011, guia live e privacidade v4; validação humana/fisiológica permanece pendente.
+
 ## Não lançado — Onda 8 — 2026-11-08
 
 - PV-0801–PV-0810: Video Lab responsivo em `/video`, com preview local e envio autorizado.
