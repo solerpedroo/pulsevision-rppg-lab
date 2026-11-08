@@ -8,7 +8,7 @@ facial. Seu resultado central é uma estimativa rastreável ou abstenção expli
 O núcleo Python independente de HTTP será a referência científica. A aquisição
 preserva PTS; ROIs produzem amostras RGB; métodos produzem sinal; qualidade decide
 se uma janela permite estimativa. Não há algoritmo implementado na Onda 0.
-A API futura orquestra jobs de arquivos voluntariamente enviados. O navegador
+A API local orquestra jobs de arquivos voluntariamente enviados. O navegador
 executará câmera, ROIs e DSP localmente em worker. Nenhum frame ao vivo deve sair
 do cliente por padrão. Equivalência Python/TS exige fixtures e tolerâncias numéricas.
 
