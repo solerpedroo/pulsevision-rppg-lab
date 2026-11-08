@@ -6,7 +6,8 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–5: aquisição, ROIs/RGB, GREEN/CHROM/POS e qualidade instrumental offline. Ainda não há câmera, upload,
+Ondas 0–5 implementadas; infraestrutura da Onda 6 disponível.
+Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. Ainda não há câmera, upload,
 validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
@@ -124,3 +125,18 @@ Relatórios preservam causas de rejeição, confirmação entre janelas e cobert
 O helper de exibição suprime estimativas vencidas, sem carregar BPM anterior.
 Veja [contrato e uso](docs/architecture/signal-quality.md) e
 [política experimental](docs/evaluation/quality-policy-v1.md).
+
+## Benchmark e referência temporal
+
+```bash
+uv run python -m benchmarks.runners.synthetic --output artifacts/benchmark-demo/inputs
+uv run python -m benchmarks.runners.run freeze artifacts/benchmark-demo/inputs/manifest.json \
+  --output artifacts/benchmark-demo/lock.json
+uv run python -m benchmarks.runners.run run artifacts/benchmark-demo/inputs/manifest.json \
+  --lock artifacts/benchmark-demo/lock.json --output artifacts/benchmark-demo/results
+```
+
+Essa demonstração é artificial. O runner gera métricas por participante, exclusões,
+coverage e gráficos, e recusa configuração alterada ou alinhamento não verificado.
+Veja [protocolo operacional](docs/evaluation/benchmark-v1.md) e
+[acesso aos datasets](docs/research/dataset-access.md).
