@@ -418,3 +418,24 @@ def test_vision_worker_never_initializes_optional_audio(configured, tmp_path, mo
         assert response.status_code == 202
         assert wait_terminal(api, response.json()["id"])["status"] == "completed"
     assert not marker.exists()
+
+
+def test_rejections_have_privacy_headers_and_version(tmp_path):
+    settings = Settings(
+        root=tmp_path / "store",
+        model=tmp_path / "none",
+        api_key="a" * 32,
+        request_limit_per_minute=1,
+    )
+    with client(settings) as api:
+        denied = api.get("/api/v1/policy")
+        assert denied.status_code == 401
+        headers = {"X-API-Key": "a" * 32}
+        origin = api.get("/api/v1/policy", headers={**headers, "Origin": "https://invalid.test"})
+        assert origin.status_code == 403
+        assert api.get("/openapi.json", headers=headers).json()["info"]["version"] == "1.0.0"
+        limited = api.get("/api/v1/policy", headers=headers)
+        assert limited.status_code == 429 and limited.headers["retry-after"] == "60"
+        for response in [denied, origin, limited]:
+            assert response.headers["cache-control"] == "no-store"
+            assert response.headers["x-content-type-options"] == "nosniff"
