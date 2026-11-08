@@ -1,13 +1,12 @@
 "use client";
+import { LabSidebar } from "@/components/lab-sidebar";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
   UploadCloud,
   ShieldCheck,
-  Video,
   FlaskConical,
-  Radio,
   Settings2,
   Download,
   Trash2,
@@ -41,11 +40,15 @@ import {
 } from "./api";
 
 export function VideoLab() {
-  const [endpoint, setEndpoint] = useState("http://127.0.0.1:8000"),
+  const [endpoint, setEndpoint] = useState(
+      process.env.NEXT_PUBLIC_PULSEVISION_API_URL ?? "http://127.0.0.1:8000",
+    ),
     [key, setKey] = useState(""),
     [draftKey, setDraftKey] = useState(""),
     [revision, setRevision] = useState(0),
-    [base, setBase] = useState("http://127.0.0.1:8000/api/v1");
+    [base, setBase] = useState(
+      `${process.env.NEXT_PUBLIC_PULSEVISION_API_URL ?? "http://127.0.0.1:8000"}/api/v1`,
+    );
   const [policy, setPolicy] = useState<Policy | null>(null),
     [connection, setConnection] = useState("Conectando"),
     [file, setFile] = useState<File | null>(null),
@@ -353,40 +356,7 @@ export function VideoLab() {
       <a href="#workspace" className="skip">
         Ir ao laboratório
       </a>
-      <aside className="sidebar">
-        <a href="/video" className="brand">
-          <span className="brand-mark">
-            <Activity size={24} />
-          </span>
-          <span>
-            PulseVision<small>rPPG RESEARCH LAB</small>
-          </span>
-        </a>
-        <p className="nav-label">WORKSPACE</p>
-        <nav aria-label="Laboratórios">
-          <a className="nav-item selected" href="/video">
-            <Video size={18} />
-            Video Lab<span>01</span>
-          </a>
-          <a className="nav-item" href="/live">
-            <Radio size={18} />
-            Live Lab<span>02</span>
-          </a>
-          <a className="nav-item" href="/benchmark">
-            <FlaskConical size={18} />
-            Benchmark<span>03</span>
-          </a>
-        </nav>
-        <div className="sidebar-bottom">
-          <ShieldCheck size={21} />
-          <strong>Local por princípio.</strong>
-          <p>
-            Arquivos escolhidos por você. Resultados experimentais, com
-            rastreabilidade.
-          </p>
-          <span className="mono">CLASSICAL ENGINE · V1</span>
-        </div>
-      </aside>
+      <LabSidebar active="video" />
       <div className="lab-main">
         <header className="topbar">
           <div className="breadcrumb">
