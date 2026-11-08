@@ -38,6 +38,9 @@ de parâmetros arbitrários do request.
 - GET /api/v1/videos/jobs/{id}/results?offset=0&limit=100: EstimatePage.
 - GET /api/v1/videos/jobs/{id}/signals?series=rgb&offset=0&limit=500&stride=1:
   amostras derivadas; rppg/spectrum aceitam window (índice, zero-based).
+  `series=roi` retorna `{timestamp_s, regions}` por frame: contornos externos
+  normalizados para orientação de exibição, ou regiões vazias sem geometria.
+  Mesma paginação, proteção, TTL e exclusão dos demais derivados.
 - GET /api/v1/videos/jobs/{id}/exports?format=json|csv|png: download explícito.
 - DELETE /api/v1/videos/jobs/{id}: remove job/arquivos e revoga acesso (204).
 
