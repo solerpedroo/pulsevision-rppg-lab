@@ -1,15 +1,27 @@
-# Privacidade e retenção — política v3 (Onda 8)
+# Privacidade e retenção — política v4 (Onda 9)
 
 O Video Lab abre preview local por object URL. Selecionar arquivo não o envia.
 Após autorização marcada e clique explícito, a UI envia o vídeo à API local
-indicada, exibindo destino e retenção. Não solicita câmera. Chave da API e arquivo
+indicada, exibindo destino e retenção. Essa rota não solicita câmera. Chave da API e arquivo
 escolhido ficam em memória da aba, sem localStorage ou serviços de terceiros.
 
 ## Webcam
 
-Não há captura/streaming de webcam nesta API. O futuro modo live continuará no
-navegador por padrão, sem gravação ou envio de frames. Iniciar/parar/exportar
-dependem de ação explícita. Nenhum comportamento de câmera é ativado pela API.
+`/live` inicia getUserMedia somente após clique e permissão do navegador, sem áudio.
+Detector, máscaras, RGB e DSP executam no navegador, em worker. Frames não são
+enviados à API nem gravados. Assets do detector/modelo são lidos da mesma origem
+local após preparação explícita; não há CDN, analytics ou backend de webcam.
+
+Stop, saída da página, perda de foco/visibilidade, troca de câmera, desconexão,
+erro ou timeout liberam tracks, encerram worker e descartam séries em memória.
+Permissão que chega após cancelamento também tem seus tracks liberados. Retorno
+de foco/refresh não reinicia captura. Buffer é limitado a 900 observações por ROI;
+no máximo 30 análises são retidas para exportação na aba. Não há localStorage.
+
+Somente ação explícita exporta JSON de derivados: RGB, motivos, timestamps,
+análises e parâmetros/hash do modelo, sem imagens. Derivados ainda são dados
+sensíveis de pesquisa; downloads pertencem ao usuário e não são retraídos por Stop.
+Sem captura em contexto seguro/recursos compatíveis, a UI informa indisponibilidade.
 
 ## Uploads e destino
 
