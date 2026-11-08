@@ -2,7 +2,7 @@
 
 Leia nesta ordem: este arquivo, state.md, o plano original e os ADRs pertinentes.
 O plano de referência é 09_pulsevision_rppg_implementation_plan.md.
-Trabalhe uma onda por vez; a primeira é a Onda 0. Não antecipe inferência ou UI de produto.
+Trabalhe uma onda por vez, conforme state.md. Não antecipe funcionalidades de outras ondas.
 Atualize state.md e CHANGELOG.md ao encerrar uma alteração significativa.
 Registre decisões duráveis em docs/adrs/ com contexto, decisão e consequências.
 
@@ -11,7 +11,8 @@ Registre decisões duráveis em docs/adrs/ com contexto, decisão e consequênci
 - packages/rppg_core: ciência independente de HTTP e React.
 - packages/rppg_types: contratos Pydantic, JSON Schema e tipos TS gerados.
 - apps/web: Next.js; câmera futura processa localmente, sem transmissão padrão.
-- services/api: reservado para FastAPI na Onda 7; não iniciar servidor fictício.
+- services/api: FastAPI local com subprocesso supervisionado; uma instância por storage.
+  Rotas não devem decodificar vídeo nem executar DSP no event loop.
 - benchmarks: protocolo, configurações, adapters e avaliação reproduzível.
 - Nunca invente BPM, métricas, ground truth, downloads ou validação clínica.
 - BPM ausente é resultado legítimo; sempre preserve causa, janela e tempo.
