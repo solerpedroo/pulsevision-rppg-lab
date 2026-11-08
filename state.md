@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-08. Onda atual: 8 — Video Lab implementado e verificado.
-Próxima onda de engenharia: 9 — webcam com processamento local no navegador.
+Atualizado: 2026-11-08. Onda atual: 9 — Live Lab implementado e verificado.
+Próxima onda de engenharia: 10 — Benchmark Lab e relatórios; experimentos reais dependem de dataset autorizado.
 Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
@@ -10,7 +10,8 @@ Validação visual de ROIs em rostos autorizados continua pendente.
 Leia AGENTS.md, plano original, docs/architecture/overview.md e docs/adrs/.
 A ideia é obter estimativas rPPG rastreáveis ou abstenção. Aquisição, ROIs/RGB,
 GREEN/CHROM/POS, qualidade, API local e Video Lab estão implementados. A UI permite
-preview local, upload autorizado, inspeção e exportação; webcam pertence à Onda 9. Não há
+preview local, upload autorizado, inspeção e exportação. O Live Lab processa webcam
+localmente em worker, mediante início explícito. Não há
 validação fisiológica em pessoas nem dataset autorizado local.
 
 ## Onda 0 — critérios
@@ -55,7 +56,7 @@ validação fisiológica em pessoas nem dataset autorizado local.
   UI de descarte e autorização foi integrada na Onda 8.
 - Schemas não exprimem validadores relacionais Pydantic; TS deve validá-los na
   futura integração. Métodos usam nomes GREEN/CHROM/POS, snake_case nos contratos.
-- API/upload disponíveis desde a Onda 7 e UI de vídeo desde a Onda 8; câmera pendente.
+- API/upload disponíveis desde a Onda 7 e UI de vídeo desde a Onda 8; webcam local disponível desde a Onda 9.
   Não há dados reais ou validação de precisão. Modelo oficial local fora do Git.
 - Não houve commit, push, publicação ou modificação do plano original.
 
@@ -519,10 +520,87 @@ Timelines incomuns/edit lists e alinhamento visual em rostos autorizados ainda
 precisam de verificação. Não houve inspeção positiva de face humana nesta onda.
 Testes sintéticos/sem rosto não são validação fisiológica ou clínica.
 
-## Próxima ação — Onda 9
+## Histórico — preparação da Onda 9
 
 Conforme os IDs da Onda 9 no plano: webcam explícita, face/ROIs, buffer RGB temporal,
 DSP client-side com equivalência numérica, qualidade/abstenção, latência observada,
 worker/capacidades do navegador e descarte local. Confirmar a lista completa de
 IDs no plano antes de implementar; não transmitir frames por padrão.
 A avaliação em dataset autorizado e a inspeção de ROIs em pessoas permanecem pendentes.
+
+## Onda 9 — Live Lab local
+
+Escopo PV-0901–PV-0913; depende das Ondas 2–5/8. Nenhuma implementação de
+Benchmark Lab/experimento da Onda 10 antecipada. Dataset/validação real seguem pendentes.
+
+- [x] PV-0901: getUserMedia sem áudio, seleção de câmera e tracks liberadas no Stop/unmount.
+- [x] PV-0902: Face Landmarker JS 1.2.2 CPU/VIDEO em worker, timestamps de mídia reais.
+- [x] PV-0903: polígonos roi-v1, preview com aspecto nativo e espelhamento conjunto de overlay/vídeo.
+- [x] PV-0904: médias RGB, exclusões e indicadores de pixels/fotometria/movimento por frame.
+- [x] PV-0905: ring buffers de 900 observações por ROI, incluindo rejeições/null e descarte.
+- [x] PV-0906: GREEN/POS/CHROM, filtros SOS e Welch em TS após regressões sintéticas Python.
+- [x] PV-0907: detector/RGB/DSP em worker; um bitmap em trânsito, deduplicação e backpressure.
+- [x] PV-0908: nove casos Python/TS compartilhados, três frequências × três métodos;
+      BPM/sinal/tempo/PSD com tolerância absoluta 1e-9 na grade 30 Hz.
+- [x] PV-0909: permission/detector/warmup/result/abstention/stopped/error,
+      continuidade e supressão por invalidez/freshness, sem reaproveitar BPM.
+- [x] PV-0910: `/live`, status, regiões, BPM opcional, gráficos, parâmetros e cadência observada.
+- [x] PV-0911: permissão negada/tardia, Stop, foco/visibilidade e track-ended simulados,
+      seleção de câmera, navegação/unmount e refresh com câmera artificial.
+- [x] PV-0912: rede monitorada durante captura com detector real, sem POST/PUT/PATCH,
+      chamadas /api ou origens externas. Nenhum frame transmitido.
+- [x] PV-0913: export JSON voluntário de derivados, parâmetros/versões/hash; sem imagens.
+- ADR 0011, guia live e política de privacidade v4 registrados.
+- Assets preparados explicitamente de npm/modelo local verificado; arquivos ignorados
+  pelo Git. Não há CDN ou download de modelo durante build/importação.
+
+## Evidências da Onda 9
+
+- uv run ruff check . e uv run mypy: passaram (64 arquivos fonte).
+- uv run pytest: 225 testes passaram, incluindo worker real com armadilha de import de áudio.
+- uv run python scripts/export_live_reference.py --check: passou; constantes/fixtures reproduzíveis.
+- npm run lint e npm run typecheck: passaram, com vendor WASM ignorado pelas ferramentas de fonte.
+- npm test: 25 testes passaram: paridade, ROIs sintéticas, adversidades, buffer, continuidade,
+  display sem alterar proveniência histórica, freshness e tolerância de cadência.
+- npm run test:e2e: 7 cenários passaram na execução final, 4 de Live Lab e 3 de Video Lab.
+  Captura por >20 s em câmera Y4M sem rosto, detector/WASM reais, abstenção, exportação,
+  Stop, tracks ended, lifecycle e nenhuma transmissão de frames. Sem webcam física.
+- NEXT_TELEMETRY_DISABLED=1 npm run build: passou; `/live` e `/video` disponíveis.
+- npm run format:check e git diff --check: passaram.
+- Screenshots desktop/mobile revisados em artifacts/wave9-desktop.png e
+  artifacts/wave9-mobile.png; viewport mobile 390×844 sem overflow horizontal.
+- Foi corrigido o bloqueio intermitente do Video Lab: stack dump reproduzido apontou
+  import de MediaPipe/audio_record/sounddevice preso em Pa_Initialize. O worker de vídeo
+  agora indisponibiliza esse módulo opcional no processo isolado, sem simular inferência.
+  Teste com módulo-armadilha e E2E completo passaram após a correção. Não se determinou
+  a condição interna do driver/daemon; o caminho de inicialização de áudio foi removido.
+- Diagnóstico temporário de stack dumps/PYTHONPATH foi removido da configuração final.
+- CI verifica referências geradas e executa E2E com câmera falsa; não executada remotamente.
+- Servidores de teste encerrados; sem commit, push, publicação ou mensagem a terceiros.
+
+## Limites atuais do Live Lab
+
+A estimativa resume uma janela passada de 20 s, com atualização 1 s e corte de
+bordas 1 s (GREEN)/1,6 s (POS/CHROM). Não é filtro incremental/instantâneo.
+Reamostragem explícita para 30 Hz exige cadência mediana >=12 Hz e gates de gaps/CV;
+30 Hz da grade não equivale ao FPS analisado e não recupera informação perdida.
+Tempos de processamento não são latência sensor→tela ou benchmark generalizável.
+Os coeficientes gerados só valem para fs=30 Hz. Kernels equivalem nos nove casos
+uniformes testados; não se alega equivalência total de aquisição/ROIs/qualidade.
+Rasterização por centros de pixels difere do OpenCV; combined exige todas as regiões.
+O fallback currentTime existe, mas requestVideoFrameCallback é o caminho testado.
+
+Eventos de foco/visibilidade/track-ended foram simulados quando o headless não
+reproduziu troca física/visibilidade nativa. Câmeras físicas, mobile real, Safari/Firefox,
+inspeção positiva de ROIs em pessoas e validação fisiológica permanecem pendentes.
+Sem peso/runtime local ou suporte do browser, a UI informa erro e libera recursos.
+Stop descarta buffers/worker; só downloads voluntários permanecem com o usuário.
+Não há diagnóstico, SpO2, identificação ou precisão clínica demonstrada.
+
+## Próxima ação — Onda 10
+
+PV-1001–PV-1010: Benchmark Lab consumindo resultados offline, relatórios e
+experimentos reproduzíveis conforme dependências do plano. Infraestrutura/UI pode
+usar fixtures artificiais explicitamente rotuladas; comparações com referência e
+conclusões reais continuam dependendo de dataset autorizado, manifesto e protocolo
+congelados da Onda 6. O usuário informou que ainda não dispõe desses datasets.
