@@ -20,3 +20,5 @@ node_modules/
 .next/
 coverage/
 *.tsbuildinfo
+# Local browser runtime assets; staged explicitly, never published as source
+/apps/web/public/mediapipe/
