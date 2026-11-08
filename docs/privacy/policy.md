@@ -1,7 +1,9 @@
-# Privacidade e retenção — política v2 (Onda 7)
+# Privacidade e retenção — política v3 (Onda 8)
 
-A API local aceita vídeos enviados explicitamente. A página Next.js atual ainda
-não solicita câmera nem envia arquivos; interface de vídeo pertence à Onda 8.
+O Video Lab abre preview local por object URL. Selecionar arquivo não o envia.
+Após autorização marcada e clique explícito, a UI envia o vídeo à API local
+indicada, exibindo destino e retenção. Não solicita câmera. Chave da API e arquivo
+escolhido ficam em memória da aba, sem localStorage ou serviços de terceiros.
 
 ## Webcam
 
@@ -21,7 +23,10 @@ a câmera automaticamente. Nome original é ignorado e não é armazenado nos jo
 Arquivos ficam em diretório UUID privado por job; fila e processamento têm limites.
 Original removido ao concluir, falhar, cancelar, atingir limite ou timeout.
 CSV intermediário de extração também é removido. Somente derivados são acessíveis
-por endpoints explícitos: estimativas, séries RGB/rPPG/PSD, CSV/JSON/PNG e hashes.
+por endpoints explícitos: estimativas, séries RGB/rPPG/PSD, contornos geométricos temporais de ROI, CSV/JSON/PNG e hashes.
+Contornos são derivados faciais sujeitos à mesma retenção e exclusão; não há
+frames de preview no servidor. Object URLs locais são revogados ao descartar
+o arquivo ou desmontar a interface. Fechar a aba não cancela job já aceito.
 Derivados expiram 24 h após término. Limpeza ocorre periodicamente e na inicialização;
 consulta de job vencido revoga acesso. Serviço desligado não tem timer independente:
 sobras de crash são limpas na próxima inicialização. Não prometer apagamento forense.
