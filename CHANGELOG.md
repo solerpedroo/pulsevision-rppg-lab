@@ -2,6 +2,17 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## 1.0.0 — preparação local / Onda 11 — 2026-11-08
+
+- PV-1101–PV-1109: contraste, foco, navegação compartilhada e escala de sinais pequenos.
+- Headers de privacidade/segurança, origens loopback configuráveis e versão consistente.
+- Override minimatch 11.0.1; auditorias completas npm/Python sem alertas conhecidos.
+- Containers locais opcionais com chave privada, worker supervisionado e modelo fora das imagens.
+- Guias Linux/câmera/Compose, README inglês/português, screenshots e demo sintéticos.
+- Relatório de pesquisa com referências e limitações; ADR 0013 e dossiê da versão.
+- 240 testes Python, 31 web e 12 cenários E2E; cobertura com limites documentados.
+- Preparação local somente: sem publicação, tag ou deploy. Validação humana continua pendente.
+
 ## Não lançado — Onda 10 (infraestrutura) — 2026-11-08
 
 - PV-1001–PV-1003/PV-1009: Benchmark Lab em `/benchmark`, revisão local e contratos gerados.
