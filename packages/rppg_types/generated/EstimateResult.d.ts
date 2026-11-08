@@ -17,6 +17,10 @@ export type EndS = number;
 export type SampleCount = number;
 export type EffectiveFps = number;
 export type ProducedAtS = number;
+export type Version = "quality-v1";
+export type Passed = boolean;
+export type EvaluatedChecks = string[];
+export type Warnings = string[];
 
 export interface EstimateResult {
   schema_version?: SchemaVersion;
@@ -28,6 +32,7 @@ export interface EstimateResult {
   window: Window;
   produced_at_s: ProducedAtS;
   metadata?: Metadata;
+  quality?: QualityAssessment | null;
 }
 export interface Window {
   start_s: StartS;
@@ -37,4 +42,14 @@ export interface Window {
 }
 export interface Metadata {
   [k: string]: string | number | boolean | null;
+}
+export interface QualityAssessment {
+  version?: Version;
+  passed: Passed;
+  metrics?: Metrics;
+  evaluated_checks?: EvaluatedChecks;
+  warnings?: Warnings;
+}
+export interface Metrics {
+  [k: string]: number | boolean | null;
 }
