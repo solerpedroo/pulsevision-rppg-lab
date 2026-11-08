@@ -911,3 +911,20 @@ progress {
     transition: none !important;
   }
 }
+.live-preview {
+  aspect-ratio: 4/3;
+}
+.live-camera {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.live-camera.mirrored {
+  transform: scaleX(-1);
+}
+.live-camera video {
+  object-fit: fill;
+}
+.session-panel > .button + .button {
+  margin-top: 10px;
+}
