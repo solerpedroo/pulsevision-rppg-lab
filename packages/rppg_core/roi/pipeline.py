@@ -1,4 +1,4 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import closing
 from dataclasses import dataclass
 from typing import Literal
@@ -29,7 +29,13 @@ class Observation:
 
 
 class RGBExtractor:
-    def __init__(self, detector: FaceDetector, config: ExtractionConfig | None = None) -> None:
+    def __init__(
+        self,
+        detector: FaceDetector,
+        config: ExtractionConfig | None = None,
+        on_regions: Callable[[float, dict[str, NDArray[np.bool_]]], None] | None = None,
+    ) -> None:
+        self.on_regions = on_regions
         self.detector = detector
         self.config = config or ExtractionConfig()
         self.previous: NDArray[np.float64] | None = None
@@ -43,6 +49,8 @@ class RGBExtractor:
         faces = self.detector.detect(rgb, frame.timestamp_s)
         flags = list(frame.quality_flags)
         if len(faces) != 1:
+            if self.on_regions:
+                self.on_regions(frame.timestamp_s, {})
             status: LandmarkStatus = "no_face" if not faces else "multiple_faces"
             self.previous = None
             self.previous_brightness.clear()
@@ -57,6 +65,8 @@ class RGBExtractor:
         try:
             masks = region_masks(landmarks, rgb.shape[1], rgb.shape[0])
         except ValueError:
+            if self.on_regions:
+                self.on_regions(frame.timestamp_s, {})
             self.previous = None
             self.previous_brightness.clear()
             self.previous_s = frame.timestamp_s
@@ -72,6 +82,8 @@ class RGBExtractor:
                 )
                 for roi in ROIS
             ]
+        if self.on_regions:
+            self.on_regions(frame.timestamp_s, masks)
         motion = 0.0
         reject = False
         if self.previous is None:
