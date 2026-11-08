@@ -1,5 +1,10 @@
 "use client";
 import { useId } from "react";
+function tick(value: number) {
+  return value !== 0 && (Math.abs(value) < 0.01 || Math.abs(value) >= 100000)
+    ? value.toExponential(1)
+    : value.toFixed(2);
+}
 type XY = { x: number; y: number | null };
 type Series = { label: string; color: string; points: XY[] };
 export function Chart({
@@ -22,7 +27,9 @@ export function Chart({
       { label: extra.length ? "G" : title, color, points },
       ...extra,
     ];
-  const all = series.flatMap((s) => s.points),
+  const all = series
+      .flatMap((s) => s.points)
+      .filter((p) => Number.isFinite(p.x)),
     finite = all.filter(
       (p) => p.y !== null && Number.isFinite(p.y) && Number.isFinite(p.x),
     );
@@ -30,7 +37,7 @@ export function Chart({
     xmax = all.length ? Math.max(...all.map((p) => p.x)) : 1;
   const ymin = finite.length ? Math.min(...finite.map((p) => p.y!)) : 0,
     ymax = finite.length ? Math.max(...finite.map((p) => p.y!)) : 1;
-  const pad = Math.max((ymax - ymin) * 0.12, 0.01),
+  const pad = Math.max((ymax - ymin) * 0.12, Math.abs(ymax) * 0.01, 1e-12),
     ylo = ymin - pad,
     yhi = ymax + pad;
   const x = (v: number) =>
@@ -82,7 +89,7 @@ export function Chart({
                 stroke="#e8edef"
               />
               <text x="44" y={32 + t * 120} textAnchor="end">
-                {(yhi - t * (yhi - ylo)).toFixed(2)}
+                {tick(yhi - t * (yhi - ylo))}
               </text>
             </g>
           ))}
@@ -99,6 +106,7 @@ export function Chart({
                   (p, i) =>
                     p.y !== null &&
                     Number.isFinite(p.y) &&
+                    Number.isFinite(p.x) &&
                     (s.points[i - 1]?.y == null || s.points[i + 1]?.y == null),
                 )
                 .map((p, i) => (
