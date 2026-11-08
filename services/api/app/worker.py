@@ -98,7 +98,29 @@ def run(directory: Path, options: dict[str, Any]) -> None:
 
     trace_file = directory / "trace.csv"
     write_json(directory / "progress.json", {"progress": 0.03})
-    export_csv(source, Path(options["model"]), trace_file, reader=LimitedReader(source))
+    roi_points: list[dict[str, Any]] = []
+
+    def regions(timestamp: float, masks: dict[str, Any]) -> None:
+        import cv2
+
+        polygons = {}
+        for name, mask in masks.items():
+            contours, _ = cv2.findContours(
+                mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )
+            if contours:
+                contour = max(contours, key=cv2.contourArea)
+                contour = cv2.approxPolyDP(contour, 1.5, True).reshape(-1, 2)
+                height, width = mask.shape
+                polygons[name] = [
+                    [float(x) / (width - 1), float(y) / (height - 1)] for x, y in contour
+                ]
+        roi_points.append({"timestamp_s": timestamp, "regions": polygons})
+
+    export_csv(
+        source, Path(options["model"]), trace_file, reader=LimitedReader(source), on_regions=regions
+    )
+    write_json(directory / "roi.json", roi_points)
     trace = load_trace_csv(trace_file, options["roi"])
     write_json(directory / "progress.json", {"progress": 0.8})
     if len(trace.timestamps) >= 2:
