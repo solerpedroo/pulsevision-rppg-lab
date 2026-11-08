@@ -1,10 +1,10 @@
 @import "tailwindcss";
 :root {
   --ink: #1a2c35;
-  --muted: #687a84;
+  --muted: #526772;
   --line: #e2e8eb;
   --accent: #c1ef87;
-  --teal: #258579;
+  --teal: #176e64;
   --background: #f4f6f7;
   --foreground: var(--ink);
   --radius: 12px;
@@ -127,7 +127,7 @@ small {
   background: #2a3d40;
   color: var(--accent);
 }
-.nav-item span,
+.nav-item span:last-child,
 .nav-item small {
   margin-left: auto;
   font-size: 9px;
@@ -297,7 +297,7 @@ h1 span {
 }
 .card-heading > .mono {
   font-size: 8px;
-  color: #91a0a7;
+  color: #526772;
   letter-spacing: 1px;
 }
 .dropzone {
@@ -342,7 +342,7 @@ h1 span {
 }
 .dropzone small {
   font-size: 9px;
-  color: #83969e;
+  color: #526772;
 }
 .text-button {
   border: 0;
@@ -379,7 +379,7 @@ h1 span {
   display: flex;
   align-items: start;
   gap: 8px;
-  color: #6a7c7c;
+  color: #526772;
   background: #f3f7f4;
   border: 1px solid #e3eae3;
   border-radius: 6px;
@@ -457,7 +457,7 @@ h1 span {
   padding: 6px 10px;
   border-radius: 20px;
   background: #f1f5f5;
-  color: #617b80;
+  color: #526772;
 }
 .preview {
   position: relative;
@@ -519,7 +519,7 @@ h1 span {
   display: flex;
   justify-content: space-between;
   margin-top: 13px;
-  color: #85949a;
+  color: #526772;
   font-size: 8px;
   letter-spacing: 1px;
 }
@@ -550,7 +550,7 @@ h1 span {
   margin-top: 17px;
   font-size: 10px;
   line-height: 1.8;
-  color: #8a989c;
+  color: #526772;
 }
 progress {
   width: 100%;
@@ -570,7 +570,7 @@ progress {
 .metric > span {
   font-size: 8px;
   letter-spacing: 1.5px;
-  color: #80939c;
+  color: #526772;
 }
 .metric > div {
   display: flex;
@@ -588,7 +588,7 @@ progress {
   font-size: 26px;
 }
 .metric small {
-  color: #93a2a7;
+  color: #526772;
   font-size: 10px;
 }
 .metric p {
@@ -614,7 +614,7 @@ progress {
 .empty-state {
   padding: 50px 20px;
   text-align: center;
-  color: #81939c;
+  color: #526772;
   display: grid;
   justify-items: center;
   gap: 13px;
@@ -669,7 +669,7 @@ progress {
   align-items: center;
   gap: 8px;
   background: #f9f5ec;
-  color: #8a7151;
+  color: #72552e;
   padding: 12px;
   font-size: 11px;
   border-radius: 6px;
@@ -720,7 +720,7 @@ progress {
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  color: #8b9ba1;
+  color: #526772;
   font-size: 9px;
   margin-top: 24px;
   padding: 0 3px;
@@ -1145,4 +1145,38 @@ progress {
   min-width: 620px;
   font-size: 12px;
   display: block;
+}
+
+/* Release polish: visible focus, readable secondary labels and numeric controls. */
+:where(button, a, input, select, summary):focus-visible {
+  outline: 2px solid #176e64;
+  outline-offset: 4px;
+}
+.preview-footer,
+.lab-footer,
+.metric > span,
+.chart-card .mono {
+  font-size: 11px;
+}
+.experimental {
+  font-size: 10px;
+}
+.timeline {
+  height: 30px;
+}
+.timeline button {
+  min-height: 24px;
+}
+@media (max-width: 780px) {
+  .experimental {
+    font-size: 9px;
+  }
+  .page-heading {
+    flex-wrap: wrap;
+  }
+  .preview-note,
+  .checkbox,
+  .field small {
+    font-size: 12px;
+  }
 }
