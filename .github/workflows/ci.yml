@@ -24,6 +24,7 @@ jobs:
           path: models/face_landmarker.task
           key: face-landmarker-64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff
       - run: uv run python scripts/fetch_face_model.py
+      - run: uv run python scripts/export_live_reference.py --check
       - run: uv run pytest
       - run: npm ci
       - run: uv run python scripts/export_schemas.py
