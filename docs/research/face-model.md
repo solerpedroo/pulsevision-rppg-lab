@@ -23,3 +23,8 @@ aplicáveis. Não existe redistribuição dos pesos nesta entrega.
 Uso experimental; não inferir identidade, emoções, demografia ou diagnóstico.
 As limitações de posição, iluminação e oclusão declaradas nas cards continuam
 aplicáveis. O teste local sem rosto confirma carregamento/execução, não robustez.
+
+Onda 9: SDK JavaScript `@mediapipe/tasks-vision` 1.2.2 (Apache-2.0), pinado no lock.
+Usa o mesmo bundle/hash em worker CPU. `npm run live:assets` copia runtime/WASM
+pinados e modelo local verificado para public/mediapipe ignorado; não faz download
+nem versiona/redistribui pesos. O browser verifica o hash novamente ao inicializar.
