@@ -17,6 +17,10 @@ def write_json(path: Path, value: Any) -> None:
 
 
 def run(directory: Path, options: dict[str, Any]) -> None:
+    # MediaPipe eagerly imports its optional audio API, whose PortAudio startup can
+    # block on desktop audio daemons. This isolated video-only process has no audio.
+    # A None sys.modules entry raises ImportError, handled by MediaPipe AudioRecord.
+    sys.modules["sounddevice"] = None  # type: ignore[assignment]
     import csv
     import hashlib
     import importlib.metadata
