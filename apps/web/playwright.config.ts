@@ -1,27 +1,34 @@
 import { defineConfig } from "@playwright/test";
 import path from "node:path";
 const root = path.resolve(__dirname, "../..");
+const apiPort = process.env.PULSEVISION_API_PORT ?? "8000";
+const apiUrl = `http://127.0.0.1:${apiPort}`;
+const webPort = process.env.PULSEVISION_WEB_PORT ?? "3000";
+const webUrl = `http://localhost:${webPort}`;
 export default defineConfig({
   testDir: "./e2e",
   globalSetup: "./e2e/global-setup.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 60000,
-  use: { baseURL: "http://localhost:3000", trace: "retain-on-failure" },
+  use: { baseURL: webUrl, trace: "retain-on-failure" },
   outputDir: "../../artifacts/wave8-browser",
   webServer: [
     {
-      command:
-        "uv run uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 --workers 1",
+      command: `uv run uvicorn services.api.app.main:app --host 127.0.0.1 --port ${apiPort} --workers 1`,
       cwd: root,
-      url: "http://127.0.0.1:8000/api/v1/health",
-      env: { PULSEVISION_STORAGE: path.join(root, "artifacts/wave8-e2e-api") },
+      url: `${apiUrl}/api/v1/health`,
+      env: {
+        PULSEVISION_STORAGE: path.join(root, "artifacts/wave8-e2e-api"),
+        PULSEVISION_WEB_ORIGINS: `${webUrl},http://127.0.0.1:${webPort}`,
+      },
       reuseExistingServer: false,
     },
     {
-      command: "npm run dev -w apps/web",
+      command: `npm run dev -w apps/web -- --port ${webPort}`,
       cwd: root,
-      url: "http://localhost:3000/video",
+      url: `${webUrl}/video`,
+      env: { NEXT_PUBLIC_PULSEVISION_API_URL: apiUrl },
       reuseExistingServer: false,
     },
   ],
