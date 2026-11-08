@@ -6,8 +6,8 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–5 e 7 implementadas; infraestrutura da Onda 6 disponível.
-Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. A interface web ainda não captura câmera nem envia vídeo; a API aceita uploads explícitos.
+Ondas 0–5, 7 e 8 implementadas; infraestrutura da Onda 6 disponível.
+Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. O Video Lab permite uploads explícitos, análise e inspeção; não há captura de câmera.
 Não há validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
@@ -151,4 +151,4 @@ uv run uvicorn services.api.app.main:app --host 127.0.0.1 --port 8000 --workers 
 Upload binário, jobs assíncronos, progresso, cancelamento, séries paginadas,
 exportação e exclusão. Originais são removidos no término; derivados expiram em 24 h.
 Veja [contrato e setup](docs/architecture/video-api.md) e
-[política de privacidade](docs/privacy/policy.md). UI de Video Lab fica para a Onda 8.
+[política de privacidade](docs/privacy/policy.md). A interface está disponível em `/video`; veja [uso do Video Lab](docs/architecture/video-lab.md).
