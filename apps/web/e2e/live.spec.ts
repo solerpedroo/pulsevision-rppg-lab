@@ -106,7 +106,12 @@ test("webcam artificial: worker real, abstenção, rede sem frames, export e Sto
     requests.filter((r) => new URL(r.url).pathname.startsWith("/api/")),
   ).toEqual([]);
   expect(
-    requests.filter((r) => !r.url.startsWith("http://localhost:3000/")),
+    requests.filter(
+      (r) =>
+        !r.url.startsWith(
+          `http://localhost:${process.env.PULSEVISION_WEB_PORT ?? "3000"}/`,
+        ),
+    ),
   ).toEqual([]);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
