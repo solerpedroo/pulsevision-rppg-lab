@@ -79,6 +79,12 @@ def test_streaming_video_roundtrip_and_explicit_delete(configured, tmp_path):
         raw = api.get(BASE + "/" + identifier + "/signals?series=rgb&limit=3&stride=2").json()
         assert raw["total"] == 50 and len(raw["points"]) == 3
         assert raw["points"][0]["r"] is None
+        regions = api.get(BASE + "/" + identifier + "/signals?series=roi&offset=1&limit=2").json()
+        assert regions["total"] == 50
+        assert regions["points"] == [
+            {"timestamp_s": 0.04, "regions": {}},
+            {"timestamp_s": 0.08, "regions": {}},
+        ]
         for kind, mime in [("json", "application/json"), ("csv", "text/csv"), ("png", "image/png")]:
             export = api.get(BASE + "/" + identifier + "/exports?format=" + kind)
             assert export.status_code == 200
