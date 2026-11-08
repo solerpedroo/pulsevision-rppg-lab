@@ -1,4 +1,4 @@
-# Privacidade e retenção — política v4 (Onda 9)
+# Privacidade e retenção — política v5 (Onda 10)
 
 O Video Lab abre preview local por object URL. Selecionar arquivo não o envia.
 Após autorização marcada e clique explícito, a UI envia o vídeo à API local
@@ -59,3 +59,12 @@ Dados de terceiros exigem consentimento/autorização e licença compatível.
 Não inferir identidade ou atributos sensíveis. Uso experimental; não é dispositivo
 médico. Nenhuma validação clínica ou autorização ética é alegada.
 A ausência de dataset autorizado/validação real da Onda 6 permanece registrada.
+
+## Revisão de benchmark
+
+`/benchmark` lê JSON localmente, até 20 MiB, sem upload à API ou busca dos caminhos
+registrados no relatório. Filtros e estatísticas são calculados na aba; não há
+localStorage, execução de experimento ou uso de câmera nessa rota. Descartar revisão
+limpa o estado da interface; não apaga arquivo fonte, cópias ou downloads anteriores.
+Exportar CSV/JSON depende de clique explícito. Derivados/identificadores podem
+continuar sujeitos aos termos do dataset; a UI não autentica licença ou consentimento.
