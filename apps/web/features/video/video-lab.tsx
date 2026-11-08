@@ -372,10 +372,10 @@ export function VideoLab() {
             <Radio size={18} />
             Live Lab<span>02</span>
           </a>
-          <button className="nav-item" disabled>
+          <a className="nav-item" href="/benchmark">
             <FlaskConical size={18} />
-            Benchmark<small>Em breve</small>
-          </button>
+            Benchmark<span>03</span>
+          </a>
         </nav>
         <div className="sidebar-bottom">
           <ShieldCheck size={21} />
