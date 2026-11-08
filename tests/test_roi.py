@@ -224,3 +224,17 @@ def test_combined_weights_pixels_and_marks_partial():
 def test_multiface_mode_cannot_be_enabled():
     with pytest.raises(ValueError):
         ExtractionConfig(single_face_only=False)
+
+
+def test_region_observer_uses_real_masks_and_clears_missing_faces():
+    seen = []
+    extractor = RGBExtractor(
+        FakeDetector([[landmarks()], [], [landmarks(), landmarks()]]),
+        on_regions=lambda timestamp, masks: seen.append((timestamp, masks)),
+    )
+    for timestamp in [0.0, 0.04, 0.08]:
+        extractor.process(frame(timestamp))
+    assert set(seen[0][1]) == set(REGIONS)
+    assert all(mask.dtype == np.bool_ and mask.shape == (256, 320) for mask in seen[0][1].values())
+    assert all(mask.any() for mask in seen[0][1].values())
+    assert seen[1:] == [(0.04, {}), (0.08, {})]
