@@ -1,21 +1,44 @@
-# Privacidade e retenção — política v1
+# Privacidade e retenção — política v2 (Onda 7)
 
-Onda 0: não há captura, upload, telemetria, persistência de sessões ou inferência.
-A página inicial não solicita câmera nem apresenta resultados simulados.
+A API local aceita vídeos enviados explicitamente. A página Next.js atual ainda
+não solicita câmera nem envia arquivos; interface de vídeo pertence à Onda 8.
 
-## Requisitos para as ondas futuras
+## Webcam
 
-Webcam: iniciar e parar apenas por ação explícita, encerrar tracks ao sair;
-processamento local, sem gravação, envio de frames ou logs de imagens por padrão.
-Exportação de derivados somente por ação explícita.
-Uploads: antes do envio mostrar destino e retenção. Padrão planejado: backend
-local, diretório isolado por job, descarte do original ao concluir/falhar/cancelar;
-limite de retenção de 24 h para sobras após interrupções, verificado na inicialização
-e periodicamente. Resultados derivados expiram em 24 h, salvo exportação explícita.
-Exclusão deverá remover original e derivados e revogar acesso ao job. Esses
-mecanismos serão implementados e testados na Onda 7, não estão ativos nesta base.
-Logs não conterão frames, RGB bruto, nomes originais ou caminhos pessoais.
+Não há captura/streaming de webcam nesta API. O futuro modo live continuará no
+navegador por padrão, sem gravação ou envio de frames. Iniciar/parar/exportar
+dependem de ação explícita. Nenhum comportamento de câmera é ativado pela API.
+
+## Uploads e destino
+
+Cliente deve mostrar destino, retenção e aviso experimental antes do envio.
+GET /api/v1/policy fornece essas informações; acesso padrão é loopback.
+O upload binário copia o arquivo para o backend local configurado. Não processa
+a câmera automaticamente. Nome original é ignorado e não é armazenado nos jobs.
+
+## Retenção e exclusão
+
+Arquivos ficam em diretório UUID privado por job; fila e processamento têm limites.
+Original removido ao concluir, falhar, cancelar, atingir limite ou timeout.
+CSV intermediário de extração também é removido. Somente derivados são acessíveis
+por endpoints explícitos: estimativas, séries RGB/rPPG/PSD, CSV/JSON/PNG e hashes.
+Derivados expiram 24 h após término. Limpeza ocorre periodicamente e na inicialização;
+consulta de job vencido revoga acesso. Serviço desligado não tem timer independente:
+sobras de crash são limpas na próxima inicialização. Não prometer apagamento forense.
+Metadados mínimos de tombstone expired permanecem por mais um período de retenção.
+DELETE remove job e arquivos e torna consultas futuras 404. Não desfaz downloads
+ou cópias que o próprio usuário já realizou.
+
+## Acesso e limites
+
+Storage não é exposto como diretório web. Respostas usam no-store/nosniff.
+Origem/host restritos; acesso não local exige chave. O serviço é para um operador,
+sem contas/autorização por pessoa. Não expor como serviço público sem controles
+de implantação adequados. Logs da aplicação não registram frames, RGB bruto,
+nome original ou mensagens de decoder com caminhos; worker retorna códigos sanitizados.
+A quota é por arquivo/job/fila, não global de disco.
 
 Dados de terceiros exigem consentimento/autorização e licença compatível.
 Não inferir identidade ou atributos sensíveis. Uso experimental; não é dispositivo
-médico. Nenhuma autorização ética ou validação clínica é alegada.
+médico. Nenhuma validação clínica ou autorização ética é alegada.
+A ausência de dataset autorizado/validação real da Onda 6 permanece registrada.
