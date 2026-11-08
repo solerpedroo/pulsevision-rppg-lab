@@ -85,3 +85,9 @@ pesos faltam em execução offline, testes correspondentes são pulados.
 CI inclui download explícito de modelo versionado/verificado por SHA256 antes
 dos testes, para não pular as integrações por ausência do arquivo.
 Nenhum dataset de pessoas é baixado pela CI. A Onda 6 científica continua pendente.
+
+Onda 9: o worker de vídeo desabilita o import opcional de `sounddevice` antes do
+MediaPipe. Foi reproduzido um bloqueio em PortAudio durante esse import, anterior
+à detecção visual, especialmente no fluxo E2E com navegador. MediaPipe trata a
+indisponibilidade do módulo opcional; o processamento visual não é simulado.
+Esse isolamento evita inicializar áudio em jobs exclusivamente de vídeo.
