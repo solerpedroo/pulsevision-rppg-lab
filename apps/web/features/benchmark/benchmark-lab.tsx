@@ -1,10 +1,7 @@
 "use client";
+import { LabSidebar } from "@/components/lab-sidebar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import {
-  Activity,
-  Video,
-  Radio,
   FlaskConical,
   ShieldCheck,
   UploadCloud,
@@ -143,44 +140,7 @@ export function BenchmarkLab() {
       <a href="#workspace" className="skip">
         Ir ao laboratório
       </a>
-      <aside className="sidebar">
-        <Link href="/video" className="brand">
-          <span className="brand-mark">
-            <Activity size={24} />
-          </span>
-          <span>
-            PulseVision<small>rPPG RESEARCH LAB</small>
-          </span>
-        </Link>
-        <p className="nav-label">WORKSPACE</p>
-        <nav aria-label="Laboratórios">
-          <Link className="nav-item" href="/video">
-            <Video size={18} />
-            Video Lab<span>01</span>
-          </Link>
-          <Link className="nav-item" href="/live">
-            <Radio size={18} />
-            Live Lab<span>02</span>
-          </Link>
-          <Link
-            className="nav-item selected"
-            href="/benchmark"
-            aria-current="page"
-          >
-            <FlaskConical size={18} />
-            Benchmark<span>03</span>
-          </Link>
-        </nav>
-        <div className="sidebar-bottom">
-          <ShieldCheck size={21} />
-          <strong>Resultados com origem.</strong>
-          <p>
-            Inspeção de arquivos locais. Sem upload, ajuste de protocolo ou
-            execução de experimento nesta tela.
-          </p>
-          <span className="mono">BENCHMARK REVIEW · V1</span>
-        </div>
-      </aside>
+      <LabSidebar active="benchmark" />
       <div className="lab-main">
         <header className="topbar">
           <div className="breadcrumb">
