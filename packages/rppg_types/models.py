@@ -48,6 +48,14 @@ class Window(Contract):
         return self
 
 
+class QualityAssessment(Contract):
+    version: Literal["quality-v1"] = "quality-v1"
+    passed: bool
+    metrics: dict[str, Finite | bool | None] = Field(default_factory=dict)
+    evaluated_checks: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class EstimateResult(Contract):
     schema_version: Literal["1.0"] = "1.0"
     bpm: Annotated[Finite, Field(gt=0)] | None
@@ -58,6 +66,7 @@ class EstimateResult(Contract):
     window: Window
     produced_at_s: NonNegative
     metadata: dict[str, str | float | int | bool | None] = Field(default_factory=dict)
+    quality: QualityAssessment | None = None
 
     @model_validator(mode="after")
     def consistent(self) -> "EstimateResult":
@@ -67,6 +76,8 @@ class EstimateResult(Contract):
             raise ValueError("Abstention requires a reason")
         if self.status == Status.GOOD and self.bpm is None:
             raise ValueError("Good status requires BPM")
+        if self.quality is not None and self.quality.passed != (self.bpm is not None):
+            raise ValueError("Quality acceptance must agree with BPM availability")
         if self.produced_at_s < self.window.end_s:
             raise ValueError("Result cannot precede its window")
         return self
