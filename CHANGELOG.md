@@ -2,6 +2,17 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 8 — 2026-11-08
+
+- PV-0801–PV-0810: Video Lab responsivo em `/video`, com preview local e envio autorizado.
+- Jobs assíncronos, progresso, cancelamento, falha, expiração e exclusão explícitos.
+- Seletores de método/ROI com recálculo, exportações CSV/JSON/PNG e inspeção por janela.
+- Gráficos RGB/rPPG/PSD/BPM com eixos, unidades e lacunas; motivos de abstenção legíveis.
+- Contornos reais de ROI por timestamp produzidos no worker e overlay sincronizado ao vídeo.
+- Paginação completa, URLs locais revogáveis, chave em memória e ausência de captura de câmera.
+- Playwright com backend real/fixture sintética; adversidades de UI simuladas identificadas.
+- ADR 0010, guia do Video Lab e privacidade v3; validação em pessoas permanece pendente.
+
 ## Não lançado — Onda 7 — 2026-11-07
 
 - PV-0701–PV-0710: FastAPI/OpenAPI local com upload binário em streaming e fila limitada.
