@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "contracts": "json2ts -i 'packages/rppg_types/schemas/*.json' -o packages/rppg_types/generated/",
-    "test:e2e": "npm run test:e2e -w apps/web"
+    "test:e2e": "npm run test:e2e -w apps/web",
+    "live:assets": "node scripts/prepare_live_assets.mjs"
   },
   "devDependencies": {
     "prettier": "^3.6.0",
