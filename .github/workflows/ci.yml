@@ -25,8 +25,10 @@ jobs:
           key: face-landmarker-64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff
       - run: uv run python scripts/fetch_face_model.py
       - run: uv run python scripts/export_live_reference.py --check
-      - run: uv run pytest
+      - run: uv run pytest --cov=rppg_core --cov=services.api.app --cov=benchmarks --cov-branch --cov-report=json:artifacts/coverage.json
       - run: npm ci
+      - run: npm audit --audit-level=moderate
+      - run: uv run pip-audit --path .venv/lib/python3.12/site-packages
       - run: uv run python scripts/export_schemas.py
       - run: npm run contracts
       - run: git diff --exit-code -- packages/rppg_types/schemas packages/rppg_types/generated
@@ -42,3 +44,9 @@ jobs:
         with:
           name: browser-failure-traces
           path: artifacts/wave8-browser
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-coverage
+          path: artifacts/coverage.json
