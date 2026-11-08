@@ -46,6 +46,8 @@ def select_peak(
     frequencies: FloatArray,
     power: FloatArray,
     config: SignalConfig,
+    *,
+    diagnostics: dict[str, float] | None = None,
 ) -> tuple[float, float, float]:
     band = (frequencies >= config.low_hz) & (frequencies <= config.high_hz)
     indices = np.flatnonzero(band)
@@ -59,6 +61,15 @@ def select_peak(
     concentration = float(power[local].sum() / power[band].sum())
     competitors = band & (np.abs(frequencies - frequencies[peak]) > spacing * 2.01)
     ratio = float(power[competitors].max() / power[peak]) if competitors.any() else 0.0
+    if diagnostics is not None:
+        diagnostics.update(
+            {
+                "candidate_frequency_hz": float(frequencies[peak]),
+                "peak_fraction": concentration,
+                "competing_peak_ratio": ratio,
+                "frequency_bin_hz": spacing,
+            }
+        )
     if concentration < config.min_peak_fraction:
         raise SignalQualityError("diffuse_spectrum")
     if ratio > config.max_competing_peak_ratio:
