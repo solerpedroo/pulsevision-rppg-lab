@@ -6,9 +6,13 @@ import hashlib
 import json
 import os
 import tempfile
+from collections.abc import Callable
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+
+import numpy as np
+from numpy.typing import NDArray
 
 from rppg_core.acquisition import VideoReader
 from rppg_core.acquisition.errors import VideoError
@@ -36,7 +40,12 @@ FIELDS = [
 
 
 def export_csv(
-    video: Path, model: Path, output: Path, *, reader: VideoReader | None = None
+    video: Path,
+    model: Path,
+    output: Path,
+    *,
+    reader: VideoReader | None = None,
+    on_regions: Callable[[float, dict[str, NDArray[np.bool_]]], None] | None = None,
 ) -> dict[str, Any]:
     if output.exists() or output.with_suffix(".metadata.json").exists():
         raise ValueError("Output or metadata file already exists")
@@ -54,7 +63,9 @@ def export_csv(
             writer = csv.DictWriter(handle, fieldnames=FIELDS)
             writer.writeheader()
             with MediaPipeDetector(model) as detector:
-                for row in RGBExtractor(detector, config).extract(reader or VideoReader(video)):
+                for row in RGBExtractor(detector, config, on_regions=on_regions).extract(
+                    reader or VideoReader(video)
+                ):
                     means = row.sample.rgb_mean if row.sample else ["", "", ""]
                     stats = row.stats
                     writer.writerow(
