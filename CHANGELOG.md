@@ -2,6 +2,17 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 6 (infraestrutura) — 2026-11-07
+
+- Adapters UBFC e referência PURE/CSV com timestamps explícitos e validação estrita.
+- Manifesto por participante/sessão, controle de acesso declarado e lock de hashes.
+- Runner GREEN/CHROM/POS com referência nas mesmas janelas e exclusões separadas.
+- Métricas por participante, agregação macro, coverage e bootstrap por participante.
+- JSON/CSV/Markdown e figuras de dispersão, Bland–Altman descritivo, erro e cobertura.
+- Testes/demonstração artificiais; rota de vídeo remove CSV intermediário.
+- Pendente avaliação real PV-0610 e confirmação dos adapters em distribuição autorizada.
+- Nenhum dataset pessoal/biométrico baixado ou resultado fisiológico alegado.
+
 ## Não lançado — Onda 5 — 2026-11-07
 
 - PV-0501–PV-0508: SignalQualityService com evidências faciais, fotométricas,
