@@ -6,7 +6,7 @@ import hashlib
 import json
 import shutil
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -17,13 +17,25 @@ from rppg_types.models import Method, Roi
 
 from rppg_core.estimation.pipeline import WindowAnalysis, analyze_trace
 from rppg_core.methods.config import MethodConfig, load_method_config
+from rppg_core.quality.config import QualityConfig, load_quality_config
+from rppg_core.quality.service import SampleQuality
+from rppg_core.quality.summary import summarize_quality
 
 from .config import SignalConfig
 from .temporal import FloatArray, SignalInputError
 
 
-def load_csv(path: Path, roi: Roi) -> tuple[FloatArray, FloatArray, NDArray[np.bool_]]:
+@dataclass(frozen=True)
+class LoadedTrace:
+    timestamps: FloatArray
+    rgb: FloatArray
+    valid: NDArray[np.bool_]
+    evidence: tuple[SampleQuality, ...]
+
+
+def load_trace_csv(path: Path, roi: Roi) -> LoadedTrace:
     timestamps, rgb, valid = [], [], []
+    evidence = []
     with path.open(newline="") as handle:
         reader = csv.DictReader(handle)
         expected = {
@@ -61,15 +73,43 @@ def load_csv(path: Path, roi: Roi) -> tuple[FloatArray, FloatArray, NDArray[np.b
                 good = row["landmark_status"] == "ok" and not blocked.intersection(flags)
                 if timestamps and len(timestamps) > 1 and "tracking_reset" in flags:
                     good = False
+
+                def metric(name: str) -> float | None:
+                    value = row.get(name)
+                    return float(value) if value else None
+
+                evidence.append(
+                    SampleQuality(
+                        landmark_status=row["landmark_status"],
+                        flags=tuple(
+                            flag
+                            for flag in flags
+                            if not (len(timestamps) == 1 and flag == "tracking_reset")
+                        ),
+                        valid_pixel_fraction=metric("valid_pixel_fraction"),
+                        valid_pixels=metric("valid_pixels"),
+                        motion_score=metric("motion_score"),
+                        dark_fraction=metric("dark_fraction"),
+                        saturated_fraction=metric("saturated_fraction"),
+                        brightness=metric("brightness"),
+                    )
+                )
                 rgb.append(values)
                 valid.append(good)
             except (ValueError, KeyError, TypeError) as exc:
                 raise SignalInputError("Malformed RGB trace CSV row") from exc
-    return (
+    return LoadedTrace(
         np.asarray(timestamps, dtype=np.float64),
         np.asarray(rgb, dtype=np.float64).reshape(-1, 3),
         np.asarray(valid, dtype=bool),
+        tuple(evidence),
     )
+
+
+def load_csv(path: Path, roi: Roi) -> tuple[FloatArray, FloatArray, NDArray[np.bool_]]:
+    """Compatibility interface; exporters use load_trace_csv to retain all evidence."""
+    trace = load_trace_csv(path, roi)
+    return trace.timestamps, trace.rgb, trace.valid
 
 
 def save_plot(analysis: WindowAnalysis, path: Path, *, synthetic: bool) -> None:
@@ -87,7 +127,7 @@ def save_plot(analysis: WindowAnalysis, path: Path, *, synthetic: bool) -> None:
     estimate = analysis.estimate
     figure.suptitle(
         title
-        + " | "
+        + "\n"
         + (
             f"{estimate.bpm:.1f} BPM"
             if estimate.bpm is not None
@@ -119,10 +159,13 @@ def export_analysis(
     method: Method = "GREEN",
     method_config: MethodConfig | None = None,
     config: SignalConfig | None = None,
+    quality_config: QualityConfig | None = None,
 ) -> dict[str, Any]:
     config = config or SignalConfig()
     method_config = method_config or MethodConfig()
-    timestamps, rgb, valid = load_csv(source, roi)
+    quality_config = quality_config or QualityConfig()
+    trace = load_trace_csv(source, roi)
+    timestamps, rgb, valid = trace.timestamps, trace.rgb, trace.valid
     analyses = list(
         analyze_trace(
             timestamps,
@@ -132,6 +175,8 @@ def export_analysis(
             method_config=method_config,
             valid=valid,
             config=config,
+            quality_config=quality_config,
+            evidence=trace.evidence,
         )
     )
     synthetic = False
@@ -148,6 +193,8 @@ def export_analysis(
         "input_kind": "synthetic" if synthetic else "unverified_rgb_trace",
         "config": asdict(config),
         "method_config": asdict(method_config),
+        "quality_config": asdict(quality_config),
+        "quality_summary": summarize_quality([x.estimate for x in analyses]).as_dict(),
         "environment": {"numpy": np.__version__, "scipy": scipy.__version__},
         "eligible_windows": len(analyses),
         "coverage": sum(item.estimate.bpm is not None for item in analyses) / len(analyses),
@@ -176,19 +223,34 @@ def main() -> int:
     )
     parser.add_argument("--method", choices=["GREEN", "CHROM", "POS", "all"], default="GREEN")
     parser.add_argument("--method-config", type=Path)
+    parser.add_argument("--quality-config", type=Path)
     args = parser.parse_args()
     try:
+        quality_config = (
+            load_quality_config(args.quality_config) if args.quality_config else QualityConfig()
+        )
         method_config = (
             load_method_config(args.method_config) if args.method_config else MethodConfig()
         )
         if args.method == "all":
             from .compare_methods import export_comparison
 
-            export_comparison(args.csv, args.output, roi=args.roi, method_config=method_config)
+            export_comparison(
+                args.csv,
+                args.output,
+                roi=args.roi,
+                method_config=method_config,
+                quality_config=quality_config,
+            )
             print(json.dumps({"methods": ["GREEN", "CHROM", "POS"]}))
             return 0
         report = export_analysis(
-            args.csv, args.output, roi=args.roi, method=args.method, method_config=method_config
+            args.csv,
+            args.output,
+            roi=args.roi,
+            method=args.method,
+            method_config=method_config,
+            quality_config=quality_config,
         )
     except (ValueError, OSError) as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
