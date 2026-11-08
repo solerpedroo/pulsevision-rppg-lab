@@ -23,7 +23,6 @@ from .config import Settings
 from .jobs import JobManager
 from .schemas import EstimatePage, Job, SignalPage
 
-ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
 MIMES = {"video/mp4", "video/quicktime", "video/webm", "video/x-msvideo"}
 
 
@@ -50,31 +49,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         finally:
             await run_in_threadpool(manager.close)
 
-    app = FastAPI(title="PulseVision Local Video API", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="PulseVision Local Video API", version="1.0.0", lifespan=lifespan)
     app.add_middleware(
         TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"]
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=ORIGINS,
+        allow_origins=list(settings.web_origins),
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["content-type", "x-api-key"],
     )
+
+    def rejected(
+        detail: str, status_code: int, headers: dict[str, str] | None = None
+    ) -> JSONResponse:
+        return JSONResponse(
+            {"detail": detail},
+            status_code=status_code,
+            headers={
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+                **(headers or {}),
+            },
+        )
 
     @app.middleware("http")
     async def boundary(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         origin = request.headers.get("origin")
-        if origin is not None and origin not in ORIGINS:
-            return JSONResponse({"detail": "Origin not allowed"}, status_code=403)
+        if origin is not None and origin not in settings.web_origins:
+            return rejected("Origin not allowed", 403)
         peer = request.client.host if request.client else ""
         try:
             local = ipaddress.ip_address(peer).is_loopback
         except ValueError:
             local = False
         if not local and settings.api_key is None:
-            return JSONResponse({"detail": "Local access only"}, status_code=403)
+            return rejected("Local access only", 403)
         if (
             request.method != "OPTIONS"
             and settings.api_key is not None
@@ -83,18 +95,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 settings.api_key.encode("utf-8"),
             )
         ):
-            return JSONResponse({"detail": "Invalid API key"}, status_code=401)
+            return rejected("Invalid API key", 401)
         if request.url.path != "/api/v1/health" and request.method != "OPTIONS":
             manager: JobManager = request.app.state.manager
             if not manager.allow(
                 peer,
                 upload=request.method == "POST" and (request.url.path == "/api/v1/videos/jobs"),
             ):
-                return JSONResponse(
-                    {"detail": "Rate limit exceeded"},
-                    status_code=429,
-                    headers={"Retry-After": "60"},
-                )
+                return rejected("Rate limit exceeded", 429, {"Retry-After": "60"})
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Content-Type-Options"] = "nosniff"
