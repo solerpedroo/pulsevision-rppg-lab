@@ -368,10 +368,10 @@ export function VideoLab() {
             <Video size={18} />
             Video Lab<span>01</span>
           </a>
-          <button className="nav-item" disabled>
+          <a className="nav-item" href="/live">
             <Radio size={18} />
-            Live Lab<small>Onda 9</small>
-          </button>
+            Live Lab<span>02</span>
+          </a>
           <button className="nav-item" disabled>
             <FlaskConical size={18} />
             Benchmark<small>Em breve</small>
