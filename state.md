@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 7 — API local/jobs implementados e verificados.
-Próxima onda de engenharia: 8 — UI de Video Lab integrada à API.
+Atualizado: 2026-11-08. Onda atual: 8 — Video Lab implementado e verificado.
+Próxima onda de engenharia: 9 — webcam com processamento local no navegador.
 Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
@@ -9,8 +9,8 @@ Validação visual de ROIs em rostos autorizados continua pendente.
 
 Leia AGENTS.md, plano original, docs/architecture/overview.md e docs/adrs/.
 A ideia é obter estimativas rPPG rastreáveis ou abstenção. Aquisição, ROIs/RGB,
-GREEN/CHROM/POS, qualidade e API local estão implementados. A web ainda tem apenas
-a página inicial; Video Lab e webcam ficam para as próximas ondas. Não há
+GREEN/CHROM/POS, qualidade, API local e Video Lab estão implementados. A UI permite
+preview local, upload autorizado, inspeção e exportação; webcam pertence à Onda 9. Não há
 validação fisiológica em pessoas nem dataset autorizado local.
 
 ## Onda 0 — critérios
@@ -51,10 +51,11 @@ validação fisiológica em pessoas nem dataset autorizado local.
   major sugerido automaticamente. Reavaliar atualização compatível do fornecedor.
 - skipLibCheck segue configuração comum do Next: há incompatibilidade de tipos
   URLPattern entre declarações de dependências; código próprio continua strict.
-- Política de retenção é requisito futuro, não mecanismo implementado.
+- Retenção/exclusão inicialmente planejadas foram implementadas na Onda 7;
+  UI de descarte e autorização foi integrada na Onda 8.
 - Schemas não exprimem validadores relacionais Pydantic; TS deve validá-los na
   futura integração. Métodos usam nomes GREEN/CHROM/POS, snake_case nos contratos.
-- API/upload disponíveis desde a Onda 7; UI de vídeo e câmera ainda pendentes.
+- API/upload disponíveis desde a Onda 7 e UI de vídeo desde a Onda 8; câmera pendente.
   Não há dados reais ou validação de precisão. Modelo oficial local fora do Git.
 - Não houve commit, push, publicação ou modificação do plano original.
 
@@ -450,10 +451,78 @@ Cancel de job já concluído é recusado; para descartar resultados, usar DELETE
 A avaliação científica real da Onda 6 e inspeção de ROIs em rostos autorizados
 continuam pendentes e não foram substituídas pelos testes de API.
 
-## Próxima ação — Onda 8
+## Histórico — preparação da Onda 8
 
 PV-0801–PV-0810: shell/navegação e Video Lab, consentimento/informação de destino
 e retenção antes do envio, validação do arquivo, integração de job/cancel/delete,
 timeline/gráficos/resultados e exportação explícita. Preservar BPM null e motivos.
 Consumir body binário (não multipart), paginação/séries/índice de janela da API.
 Adicionar fluxo E2E de vídeo e acessibilidade. Não implementar câmera antes da Onda 9.
+
+## Onda 8 — Video Lab
+
+Escopo PV-0801–PV-0810; depende da API local da Onda 7. Nenhuma funcionalidade
+live/benchmark visual foi antecipada. A Onda 6 científica permanece pendente.
+
+- [x] PV-0801: shell responsivo, navegação, tokens de tema, cards/controles e rota `/video`.
+- [x] PV-0802: validação de extensão, bytes, duração/resolução no navegador e preview local.
+- [x] PV-0803: autorização e destino explícitos, upload binário, polling, progresso,
+      cancelamento/exclusão, erros e expiração; chave opcional só em memória.
+- [x] PV-0804: gráficos SVG de RGB/rPPG/PSD/BPM e cobertura; null preserva lacunas.
+- [x] PV-0805: observer de máscaras no núcleo, contornos por PTS no worker,
+      série ROI paginada e overlay por frame/seek, com timeline de janelas.
+- [x] PV-0806: método/ROI configuráveis; reanálise cria novo job e exclui o anterior.
+- [x] PV-0807: downloads explícitos de CSV/JSON/PNG, sem exportação automática.
+- [x] PV-0808: estados vazio, envio/fila/processamento, falha, cancelado, expirado,
+      concluído sem face/sem estimativa e rejeições com motivos legíveis.
+- [x] PV-0809: controles nativos, foco/skip link, seleção de janela, labels/unidades,
+      status acessíveis e teste de teclado; layout mobile sem overflow horizontal.
+- [x] PV-0810: E2E Chromium com API/worker/modelo reais e vídeo sintético sem rosto.
+- ADR 0010, guia de operação e política de privacidade v3 registrados.
+- Next dev gerou `apps/web/AGENTS.md` com orientações do framework; instruções
+  da raiz continuam aplicáveis. Contratos científicos Pydantic não foram alterados.
+
+## Evidências da Onda 8
+
+- uv run ruff check .: passou.
+- uv run mypy: passou (62 arquivos fonte).
+- uv run pytest: 224 testes passaram, incluindo observer de máscaras e paginação
+  real de contornos vazios, sem armazenar original/CSV após processamento.
+- npm run lint e npm run typecheck: passaram.
+- npm test: 10 testes passaram; validação de arquivo/destino, paginação completa,
+  lookup temporal sem geometria obsoleta, erros, sessão expirada e gráficos com lacunas.
+- npm run test:e2e: 3 testes passaram na execução final (11,2 s no ambiente local).
+  Fluxo real: upload POS/testa → completed sem BPM → seek → JSON → reanálise CHROM
+  → job antigo 404 → exclusão → novo job 404, preview removido e autorização desmarcada.
+  Cenários simulados identificados: indisponibilidade de conexão, cancelamento/falha de UI.
+  Uma execução intermediária excedeu o prazo de 45 s enquanto processing; a causa
+  não foi determinada. As execuções estáveis subsequentes passaram; não é SLA de latência.
+- NEXT_TELEMETRY_DISABLED=1 npm run build: passou; rotas `/`, `/_not-found` e `/video`.
+- npm run format:check e git diff --check: passaram.
+- Screenshots desktop/mobile inspecionados em artifacts/wave8-desktop.png e
+  artifacts/wave8-mobile.png; sem overflow mobile ou exceções de página no fluxo real.
+- Fixture H.264 original sem rosto, downloads e storage de E2E permanecem ignorados
+  pelo Git. Servidores de teste foram encerrados pelo Playwright.
+- CI inclui instalação do Chromium e E2E após build; não foi executada remotamente.
+- Sem commit, push, publicação, envio a terceiros ou modificação do plano original.
+
+## Limites atuais do Video Lab
+
+É inspeção offline, com pipeline Python e backend local; nenhuma webcam ou DSP
+live foi implementada. A aba não persiste arquivo/chave/job em localStorage;
+recarregar perde a seleção, mas jobs aceitos continuam sujeitos ao TTL do servidor.
+Excluir sessão limpa backend e preview local; downloads já feitos não são retraídos.
+Contornos externos são simplificados e não representam todos os furos/pixels úteis;
+qualidade do sinal pode ser ruim mesmo com contorno visível. Há fallback temporal
+quando requestVideoFrameCallback não está disponível e supressão após gaps de 250 ms.
+Timelines incomuns/edit lists e alinhamento visual em rostos autorizados ainda
+precisam de verificação. Não houve inspeção positiva de face humana nesta onda.
+Testes sintéticos/sem rosto não são validação fisiológica ou clínica.
+
+## Próxima ação — Onda 9
+
+Conforme os IDs da Onda 9 no plano: webcam explícita, face/ROIs, buffer RGB temporal,
+DSP client-side com equivalência numérica, qualidade/abstenção, latência observada,
+worker/capacidades do navegador e descarte local. Confirmar a lista completa de
+IDs no plano antes de implementar; não transmitir frames por padrão.
+A avaliação em dataset autorizado e a inspeção de ROIs em pessoas permanecem pendentes.
