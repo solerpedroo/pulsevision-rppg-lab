@@ -6,3 +6,7 @@ package-lock.json
 packages/rppg_types/generated
 packages/rppg_types/schemas
 09_pulsevision_rppg_implementation_plan.md
+# Generated Python/TS numerical reference
+apps/web/features/live/generated-config.json
+tests/fixtures/live-dsp.json
+apps/web/public/mediapipe/
