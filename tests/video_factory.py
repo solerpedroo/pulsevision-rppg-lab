@@ -24,6 +24,10 @@ def make_video(
         stream.pix_fmt = "yuv420p"
         stream.codec_context.time_base = Fraction(1, 1000)
         stream.time_base = Fraction(1, 1000)
+        if path.suffix == ".avi":
+            # AVI CFR headers count frame slots; use the actual 25 Hz codec time base.
+            stream.codec_context.time_base = Fraction(1, 25)
+            stream.time_base = Fraction(1, 25)
         if rotation:
             stream.set_display_rotation(rotation)
         for timestamp in pts:
