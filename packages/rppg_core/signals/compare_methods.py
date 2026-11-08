@@ -13,8 +13,10 @@ from rppg_types.models import Method, Roi
 
 from rppg_core.estimation.pipeline import WindowAnalysis, analyze_trace
 from rppg_core.methods.config import MethodConfig
+from rppg_core.quality.config import QualityConfig
+from rppg_core.quality.summary import summarize_quality
 
-from .analyze_rgb import load_csv
+from .analyze_rgb import load_trace_csv
 from .config import SignalConfig
 from .temporal import validate_trace
 
@@ -75,6 +77,15 @@ def save_comparison_plot(
         xlabel="Window end, session time (s)",
         ylabel="Estimated BPM",
     )
+    axis.ticklabel_format(axis="y", style="plain", useOffset=False)
+    accepted = [w.estimate.bpm for windows in analyses.values() for w in windows
+                if w.estimate.bpm is not None]
+    if accepted:
+        axis.set_ylim(min(accepted)-3, max(accepted)+3)
+    else:
+        axis.set_yticks([])
+        axis.text(.5, .5, "No accepted estimates", transform=axis.transAxes,
+                  ha="center", va="center")
     axis.legend()
     figure.savefig(path, dpi=140)
     plt.close(figure)
@@ -87,10 +98,13 @@ def export_comparison(
     roi: Roi = "combined",
     config: SignalConfig | None = None,
     method_config: MethodConfig | None = None,
+    quality_config: QualityConfig | None = None,
 ) -> dict[str, Any]:
     config = config or SignalConfig()
     method_config = method_config or MethodConfig()
-    timestamps, rgb, valid = load_csv(source, roi)
+    quality_config = quality_config or QualityConfig()
+    trace = load_trace_csv(source, roi)
+    timestamps, rgb, valid = trace.timestamps, trace.rgb, trace.valid
     validate_trace(timestamps, rgb)
     # Extra two input intervals cover ceil/even rounding of CHROM projection length.
     margin = max(
@@ -109,6 +123,8 @@ def export_comparison(
                 valid=valid,
                 config=common,
                 method_config=method_config,
+                quality_config=quality_config,
+                evidence=trace.evidence,
             )
         )
         for method in METHODS
@@ -128,12 +144,14 @@ def export_comparison(
         "roi": roi,
         "signal_config": asdict(common),
         "method_config": asdict(method_config),
+        "quality_config": asdict(quality_config),
         "environment": {"numpy": np.__version__, "scipy": scipy.__version__},
         "methods": {},
     }
     for method, windows in analyses.items():
         latest = windows[-1]
         report["methods"][method] = {
+            "quality_summary": summarize_quality([w.estimate for w in windows]).as_dict(),
             "eligible_windows": len(windows),
             "coverage": sum(w.estimate.bpm is not None for w in windows) / len(windows),
             "accepted_windows": sum(w.estimate.bpm is not None for w in windows),
