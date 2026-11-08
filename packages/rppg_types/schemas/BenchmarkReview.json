@@ -1,0 +1,438 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "ReviewFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "participant_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Participant Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "condition": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Condition",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "participant_id",
+        "session_id",
+        "condition",
+        "reason"
+      ],
+      "title": "ReviewFailure",
+      "type": "object"
+    },
+    "ReviewRun": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Run Id",
+          "type": "string"
+        },
+        "experiment": {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "import"
+          ],
+          "title": "Experiment",
+          "type": "string"
+        },
+        "dataset": {
+          "enum": [
+            "synthetic",
+            "UBFC-rPPG",
+            "PURE"
+          ],
+          "title": "Dataset",
+          "type": "string"
+        },
+        "result_kind": {
+          "enum": [
+            "synthetic_demonstration",
+            "dataset_evaluation"
+          ],
+          "title": "Result Kind",
+          "type": "string"
+        },
+        "dataset_version": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Dataset Version",
+          "type": "string"
+        },
+        "protocol_version": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Protocol Version",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "development",
+            "validation",
+            "test"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "roi": {
+          "enum": [
+            "forehead",
+            "left_cheek",
+            "right_cheek",
+            "combined"
+          ],
+          "title": "Roi",
+          "type": "string"
+        },
+        "window_s": {
+          "exclusiveMinimum": 0,
+          "title": "Window S",
+          "type": "number"
+        },
+        "seed": {
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "bootstrap_samples": {
+          "minimum": 100,
+          "title": "Bootstrap Samples",
+          "type": "integer"
+        },
+        "source_report": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Source Report",
+          "type": "string"
+        },
+        "report_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Report Sha256",
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Manifest Sha256",
+          "type": "string"
+        },
+        "provenance": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Provenance",
+          "type": "object"
+        },
+        "configuration": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Configuration",
+          "type": "object"
+        },
+        "sessions": {
+          "items": {
+            "$ref": "#/$defs/ReviewSession"
+          },
+          "maxItems": 10000,
+          "minItems": 1,
+          "title": "Sessions",
+          "type": "array"
+        },
+        "failures": {
+          "items": {
+            "$ref": "#/$defs/ReviewFailure"
+          },
+          "title": "Failures",
+          "type": "array"
+        },
+        "windows": {
+          "items": {
+            "$ref": "#/$defs/ReviewWindow"
+          },
+          "maxItems": 100000,
+          "title": "Windows",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "run_id",
+        "experiment",
+        "dataset",
+        "result_kind",
+        "dataset_version",
+        "protocol_version",
+        "split",
+        "roi",
+        "window_s",
+        "seed",
+        "bootstrap_samples",
+        "source_report",
+        "report_sha256",
+        "manifest_sha256",
+        "provenance",
+        "configuration",
+        "sessions",
+        "failures",
+        "windows",
+        "limitations"
+      ],
+      "title": "ReviewRun",
+      "type": "object"
+    },
+    "ReviewSession": {
+      "additionalProperties": false,
+      "properties": {
+        "participant_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Participant Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "condition": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Condition",
+          "type": "string"
+        }
+      },
+      "required": [
+        "participant_id",
+        "session_id",
+        "condition"
+      ],
+      "title": "ReviewSession",
+      "type": "object"
+    },
+    "ReviewWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "participant_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Participant Id",
+          "type": "string"
+        },
+        "session_id": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "condition": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Condition",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "GREEN",
+            "CHROM",
+            "POS"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "start_s": {
+          "minimum": 0,
+          "title": "Start S",
+          "type": "number"
+        },
+        "end_s": {
+          "exclusiveMinimum": 0,
+          "title": "End S",
+          "type": "number"
+        },
+        "reference_start_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference Start S"
+        },
+        "reference_end_s": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference End S"
+        },
+        "eligible": {
+          "title": "Eligible",
+          "type": "boolean"
+        },
+        "exclusion_reason": {
+          "anyOf": [
+            {
+              "maxLength": 160,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Exclusion Reason"
+        },
+        "bpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Bpm"
+        },
+        "reference_bpm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference Bpm"
+        },
+        "reasons": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "participant_id",
+        "session_id",
+        "condition",
+        "method",
+        "start_s",
+        "end_s",
+        "reference_start_s",
+        "reference_end_s",
+        "eligible",
+        "exclusion_reason",
+        "bpm",
+        "reference_bpm",
+        "reasons"
+      ],
+      "title": "ReviewWindow",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "benchmark-review-v1",
+      "default": "benchmark-review-v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 160,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "hypothesis": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Hypothesis",
+      "type": "string"
+    },
+    "runs": {
+      "items": {
+        "$ref": "#/$defs/ReviewRun"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Runs",
+      "type": "array"
+    },
+    "pending": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pending",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "title",
+    "hypothesis",
+    "runs",
+    "pending",
+    "limitations"
+  ],
+  "title": "BenchmarkReview",
+  "type": "object"
+}
