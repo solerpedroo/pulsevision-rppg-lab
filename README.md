@@ -6,7 +6,7 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–4: fundação, ingestão temporal, ROIs/RGB e GREEN/CHROM/POS offline. Ainda não há câmera, upload,
+Ondas 0–5: aquisição, ROIs/RGB, GREEN/CHROM/POS e qualidade instrumental offline. Ainda não há câmera, upload,
 validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
@@ -111,3 +111,16 @@ uv run python -m rppg_core.signals.analyze_rgb artifacts/green-demo/rgb_syntheti
 JSON e PNG com suporte temporal comum, sinais, PSD e BPM por janela.
 Referências numéricas e limites em
 [docs/architecture/classical-methods.md](docs/architecture/classical-methods.md).
+
+## Qualidade, abstenção e cobertura
+
+```bash
+uv run python -m rppg_core.signals.analyze_rgb artifacts/sessao/rgb_traces.csv \
+  --method all --quality-config configs/quality/quality-v1.json \
+  --output artifacts/sessao/quality
+```
+
+Relatórios preservam causas de rejeição, confirmação entre janelas e cobertura.
+O helper de exibição suprime estimativas vencidas, sem carregar BPM anterior.
+Veja [contrato e uso](docs/architecture/signal-quality.md) e
+[política experimental](docs/evaluation/quality-policy-v1.md).
