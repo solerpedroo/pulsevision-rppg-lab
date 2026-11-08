@@ -33,3 +33,8 @@ a causa não foi determinada e as execuções finais passaram. O timeout real do
 job continua 180 s; esta verificação não estabelece SLA nem robustez sob carga.
 Precisão fisiológica, inspeção positiva de ROIs em faces autorizadas e compatibilidade
 de todos os codecs/timelines permanecem sem validação nesta onda.
+
+Retomada na Onda 9: o timeout intermitente foi reproduzido. Stack dump apontou
+inicialização opcional de PortAudio no import de MediaPipe, antes da inferência.
+O worker de vídeo passou a indisponibilizar sounddevice no processo isolado;
+regressão com módulo de áudio que falha ao importar foi adicionada. Veja ADR 0011.
