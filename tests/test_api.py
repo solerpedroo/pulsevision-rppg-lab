@@ -401,3 +401,20 @@ def test_suspended_worker_keeps_health_responsive_and_can_be_killed(configured):
             if process.poll() is None:
                 process.kill()
                 process.wait(timeout=3)
+
+
+def test_vision_worker_never_initializes_optional_audio(configured, tmp_path, monkeypatch):
+    trap = tmp_path / "audio_trap"
+    trap.mkdir()
+    marker = tmp_path / "audio_imported"
+    (trap / "sounddevice.py").write_text(
+        f"from pathlib import Path\nPath({str(marker)!r}).touch()\n"
+        "raise RuntimeError('Video worker must not initialize audio')\n"
+    )
+    monkeypatch.setenv("PYTHONPATH", str(trap))
+    video = make_video(tmp_path / "blank.mp4", list(range(0, 200, 40)), width=128, height=128)
+    with client(configured) as api:
+        response = api.post(BASE, content=video.read_bytes(), headers={"Content-Type": "video/mp4"})
+        assert response.status_code == 202
+        assert wait_terminal(api, response.json()["id"])["status"] == "completed"
+    assert not marker.exists()
