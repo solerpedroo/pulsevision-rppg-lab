@@ -2,6 +2,17 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 10 (infraestrutura) — 2026-11-08
+
+- PV-1001–PV-1003/PV-1009: Benchmark Lab em `/benchmark`, revisão local e contratos gerados.
+- Filtros/agrupamentos por método, participante, ROI, cenário e janela, sem misturar execuções.
+- Erros macro por participante com cobertura/exclusões/falhas; ausência de pares mantém null.
+- Conversão de relatórios offline e estudos predefinidos com locks de plano, dados e código.
+- Relatórios JSON/Markdown/PNG e demonstração artificial de janelas 10/20/30 s.
+- Exportação voluntária CSV/JSON; sem upload ou execução científica na rota web.
+- Protocolos A–E em draft, com requisitos de acesso, PTS e transformação verificável.
+- ADR 0012 e guia de uso; PV-1004–PV-1008 e conclusão científica de PV-1010 pendentes.
+
 ## Não lançado — Onda 9 — 2026-11-08
 
 - PV-0901–PV-0913: Live Lab em `/live`, câmera explícita, seleção e Stop com descarte.
