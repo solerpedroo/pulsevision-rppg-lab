@@ -8,27 +8,29 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
     "next": "16.4.5",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.3.0",
-    "lucide-react": "^0.468.0"
+    "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
+    "@playwright/test": "^1.65.0",
+    "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "tailwindcss": "^4.1.0",
-    "@tailwindcss/postcss": "^4.1.0",
+    "ajv": "^8.17.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "16.4.5",
-    "vitest": "^4.0.0",
-    "ajv": "^8.17.1"
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
   }
 }
