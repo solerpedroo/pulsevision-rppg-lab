@@ -1,7 +1,7 @@
 # Estado do projeto
 
-Atualizado: 2026-11-08. Onda atual: 9 — Live Lab implementado e verificado.
-Próxima onda de engenharia: 10 — Benchmark Lab e relatórios; experimentos reais dependem de dataset autorizado.
+Atualizado: 2026-11-08. Onda atual: 10 — Benchmark Lab/estudos/relatórios implementados; avaliação real pendente.
+Próxima onda de engenharia: 11 — polish e apresentação, preservando pendências científicas das Ondas 6/10.
 Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
@@ -11,7 +11,8 @@ Leia AGENTS.md, plano original, docs/architecture/overview.md e docs/adrs/.
 A ideia é obter estimativas rPPG rastreáveis ou abstenção. Aquisição, ROIs/RGB,
 GREEN/CHROM/POS, qualidade, API local e Video Lab estão implementados. A UI permite
 preview local, upload autorizado, inspeção e exportação. O Live Lab processa webcam
-localmente em worker, mediante início explícito. Não há
+localmente em worker, mediante início explícito. O Benchmark Lab importa revisões
+offline localmente e mostra erros/cobertura com proveniência. Não há
 validação fisiológica em pessoas nem dataset autorizado local.
 
 ## Onda 0 — critérios
@@ -597,10 +598,83 @@ Sem peso/runtime local ou suporte do browser, a UI informa erro e libera recurso
 Stop descarta buffers/worker; só downloads voluntários permanecem com o usuário.
 Não há diagnóstico, SpO2, identificação ou precisão clínica demonstrada.
 
-## Próxima ação — Onda 10
+## Histórico — preparação da Onda 10
 
 PV-1001–PV-1010: Benchmark Lab consumindo resultados offline, relatórios e
 experimentos reproduzíveis conforme dependências do plano. Infraestrutura/UI pode
 usar fixtures artificiais explicitamente rotuladas; comparações com referência e
 conclusões reais continuam dependendo de dataset autorizado, manifesto e protocolo
 congelados da Onda 6. O usuário informou que ainda não dispõe desses datasets.
+
+## Onda 10 — infraestrutura de estudos e revisão
+
+Escopo realizado PV-1001–PV-1003/PV-1009 e infraestrutura documental de PV-1010.
+Dependências de engenharia 6/8/9 atendidas; dependência científica de dados reais não atendida.
+Não declarar esta onda cientificamente concluída.
+
+- [x] PV-1001: `/benchmark` importa revisão JSON offline, sem upload ou execução na rota.
+- [x] PV-1002: filtros/agrupamentos por método, participante, ROI, cenário, janela e execução;
+      gráficos/tabela com erros macro, cobertura, exclusões, falhas e ausência legítima de métrica.
+- [x] PV-1003: conversão/estudo gera JSON, resumo com bootstrap, Markdown e comparação PNG;
+      resultados individuais do runner mantêm figuras e CSVs originais.
+- [ ] PV-1004: comparação de métodos em dataset autorizado continua pendente.
+- [ ] PV-1005: comparação anatômica de ROIs continua pendente; não duplicar combined sob outros nomes.
+- [ ] PV-1006: avaliação real de janelas/latência/erro/cobertura pendente;
+      demonstração artificial executou 10/20/30 s sem medir latência sensor→tela.
+- [ ] PV-1007: ruído/desfoque/luz/compressão em vídeos autorizados com alterações verificadas pendentes.
+- [ ] PV-1008: movimento/cadência/frames faltantes reais pendentes; proxy artificial não substitui vídeo.
+- [x] PV-1009: estudo predefinido congela plano/locks/código, reutiliza verificação de entradas,
+      registra parâmetros/seeds/versões/hashes e preserva exclusões/abstenções.
+- [ ] PV-1010: gerador produz relatório com hipótese/método/resultados/limitações/trabalhos futuros;
+      relatório científico final de experimentos reais permanece pendente.
+- Protocolos A–E em benchmarks/protocols/experiments-v1.json são draft, não resultados/pré-registro independente.
+- ADR 0012, guia de uso e política de privacidade v5 registrados. Não houve trabalho da Onda 11.
+
+## Evidências da Onda 10
+
+- uv run ruff check . e uv run mypy: passaram (67 arquivos fonte).
+- uv run pytest: 230 testes passaram; cinco novos de estudo/contrato/conversão/congelamento.
+- Script de schemas executado e npm run contracts gerou BenchmarkReview/JSON Schema/TS;
+  modelos científicos anteriores mantidos. Arquivos gerados não foram editados manualmente.
+- npm run lint e npm run typecheck: passaram.
+- npm test: 30 testes passaram, incluindo peso igual por participante, null sem pares,
+  exclusões/abstenções, inconsistências do relatório e export CSV com rótulos seguros.
+- npm run test:e2e: nove cenários passaram (dois de benchmark, quatro live, três vídeo).
+- Após ajuste de legibilidade/rolagem interna dos gráficos, os dois E2E de benchmark
+  passaram novamente; viewport 390×844 sem overflow horizontal do documento.
+- NEXT_TELEMETRY_DISABLED=1 npm run build: passou; `/benchmark`, `/live` e `/video` disponíveis.
+- npm run format:check e git diff --check: passaram.
+- CLI real em RGB/referência artificiais: três participantes, GREEN/CHROM/POS e janelas
+  de 10/20/30 s. Pacote em artifacts/wave10-first-demo/results/review/.
+  comparison.png e screenshots artifacts/wave10-desktop.png/wave10-mobile.png inspecionados.
+- Resumo recomputado da revisão coincide com resumo original por execução. Mutação de
+  plano/dado congelado foi recusada; sem pares mantém erro null e cobertura de elegíveis.
+- E2E importou bundle produzido pelo runner, filtrou/agrupou, exportou CSV e descartou.
+  Nenhuma chamada /api ou método de envio durante a revisão; nenhuma exceção de página.
+- CI já exporta/verifica contratos e roda E2E; global setup prepara estudo artificial em
+  pasta única ignorada. Não houve execução remota da CI.
+- Servidores de testes encerrados; sem commit/push/publicação ou envio a terceiros.
+
+## Limites e retomada científica
+
+A UI valida contrato/consistência, mas não autentica origem, acesso, licença ou hashes
+contra arquivos originais. Resultados importados são declarações auditáveis do produtor.
+Métricas do recorte são descritivas e condicionais à aceitação; não escolher vencedor
+ignorando cobertura, coorte, participantes sem pares ou suporte temporal. Nenhum bootstrap
+é recalculado na UI; summary.json offline mantém o bootstrap por participante.
+O CSV contém todo o recorte; JSON completo contém a revisão inteira. A página limita a
+18 grupos por vez e mantém execuções separadas. Limites de import: 20 MiB/64 runs/100 mil janelas.
+Dados ficam na aba, sem localStorage; descartar não apaga fonte ou downloads anteriores.
+
+Os protocolos e o lote não implementam/validam automaticamente transformações externas
+nem provam qualidade de ROIs/alinhamento. Não houve avaliação real de erro, latência,
+robustez facial, diagnóstico ou validação clínica. O usuário já informou que não tem
+dataset; não tratar essa ausência como autorização de acesso/download.
+
+## Próxima ação — Onda 11 de engenharia
+
+Consultar os IDs e dependências da Onda 11 antes de implementar polish/apresentação.
+Preservar rótulos artificiais e pendências PV-0610/PV-1004–PV-1008/PV-1010; não apresentar
+portfólio como validação fisiológica concluída. Release/deploy não foram autorizados.
+Para fechar a parte científica, obter dados autorizados, registrar termos/alinhamento,
+congelar protocolo e executar avaliação real antes de redigir conclusões finais.
