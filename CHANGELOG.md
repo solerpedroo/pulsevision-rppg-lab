@@ -2,6 +2,16 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — Onda 7 — 2026-11-07
+
+- PV-0701–PV-0710: FastAPI/OpenAPI local com upload binário em streaming e fila limitada.
+- Subprocessos supervisionados com limites, cancelamento e encerramento com o pai.
+- SQLite de metadados, restart, expiração e exclusão completa por job.
+- Estimativas/séries paginadas e exportação JSON/CSV/PNG com hashes/configurações.
+- Bloqueios de host/origin, chave opcional, rate limit e ausência de cache.
+- Testes de HTTP real e cenários adversos; CI busca modelo oficial pinado por hash.
+- Privacidade v2 e ADR 0009; sem interface de vídeo ou validação fisiológica.
+
 ## Não lançado — Onda 6 (infraestrutura) — 2026-11-07
 
 - Adapters UBFC e referência PURE/CSV com timestamps explícitos e validação estrita.
