@@ -260,7 +260,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def signals(
         request: Request,
         identifier: str,
-        series: Literal["rgb", "rppg", "spectrum"] = "rppg",
+        series: Literal["rgb", "rppg", "spectrum", "roi"] = "rppg",
         window: Annotated[int, Query(ge=0, le=10000)] = 0,
         offset: Annotated[int, Query(ge=0)] = 0,
         limit: Annotated[int, Query(ge=1, le=1000)] = 500,
@@ -268,13 +268,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ) -> SignalPage:
         directory = ready(request, identifier)
         file = (
-            directory / "rgb.json" if series == "rgb" else directory / "signals" / f"{window}.json"
+            directory / f"{series}.json"
+            if series in {"rgb", "roi"}
+            else directory / "signals" / f"{window}.json"
         )
         try:
             data = json.loads(file.read_text())
         except OSError:
             raise HTTPException(404, "Signal window unavailable") from None
-        points = data if series == "rgb" else data[series]
+        points = data if series in {"rgb", "roi"} else data[series]
         return SignalPage(
             job_id=identifier,
             total=len(points),
