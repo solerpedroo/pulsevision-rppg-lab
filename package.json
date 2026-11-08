@@ -11,7 +11,8 @@
     "build": "npm run build -w apps/web",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
-    "contracts": "json2ts -i 'packages/rppg_types/schemas/*.json' -o packages/rppg_types/generated/"
+    "contracts": "json2ts -i 'packages/rppg_types/schemas/*.json' -o packages/rppg_types/generated/",
+    "test:e2e": "npm run test:e2e -w apps/web"
   },
   "devDependencies": {
     "prettier": "^3.6.0",
