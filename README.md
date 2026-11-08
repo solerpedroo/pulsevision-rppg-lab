@@ -6,7 +6,7 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–5 e 7–9 implementadas; infraestrutura da Onda 6 disponível.
+Ondas 0–5 e 7–9 implementadas; infraestrutura das Ondas 6/10 e Benchmark Lab disponíveis.
 Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. O Video Lab permite uploads explícitos; o Live Lab processa webcam localmente no navegador.
 Não há validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
@@ -165,3 +165,17 @@ acima. A câmera começa por ação explícita; frames não são enviados ao bac
 GREEN/POS/CHROM analisam janela passada de 20 s com qualidade e abstenção.
 Stop libera tracks, encerra worker e descarta séries. Exporte derivados antes de parar.
 Veja [operação e limites do Live Lab](docs/architecture/live-lab.md).
+
+## Benchmark Lab e estudos offline (Onda 10)
+
+```bash
+uv run python -m benchmarks.study demo --output artifacts/study-demo
+npm run dev -w apps/web
+```
+
+Abra http://localhost:3000/benchmark e selecione o JSON em
+`artifacts/study-demo/results/review/benchmark-review-v1.json`.
+Demonstração artificial de janelas 10/20/30 s, sem validação em pessoas.
+A revisão é local, sem upload. Estudos congelados geram JSON/Markdown/PNG;
+[guia do Benchmark Lab](docs/architecture/benchmark-lab.md).
+Experimentos A–E reais e relatório científico final aguardam dados autorizados.
