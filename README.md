@@ -6,8 +6,8 @@ facial, com resultados rastreáveis e abstenção quando o sinal for insuficient
 
 ## Estado
 
-Ondas 0–5, 7 e 8 implementadas; infraestrutura da Onda 6 disponível.
-Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. O Video Lab permite uploads explícitos, análise e inspeção; não há captura de câmera.
+Ondas 0–5 e 7–9 implementadas; infraestrutura da Onda 6 disponível.
+Avaliação em UBFC/PURE real pendente: ainda não há dataset autorizado local. O Video Lab permite uploads explícitos; o Live Lab processa webcam localmente no navegador.
 Não há validação em pessoas. Os métodos clássicos estimam periodicidade em traces RGB.
 Leia [state.md](state.md), [arquitetura](docs/architecture/overview.md),
 [protocolo](docs/evaluation/protocol-v1.md) e o plano original.
@@ -152,3 +152,16 @@ Upload binário, jobs assíncronos, progresso, cancelamento, séries paginadas,
 exportação e exclusão. Originais são removidos no término; derivados expiram em 24 h.
 Veja [contrato e setup](docs/architecture/video-api.md) e
 [política de privacidade](docs/privacy/policy.md). A interface está disponível em `/video`; veja [uso do Video Lab](docs/architecture/video-lab.md).
+
+## Webcam local (Onda 9)
+
+```bash
+npm run live:assets
+npm run dev -w apps/web
+```
+
+Abra http://localhost:3000/live. Requer o modelo local já verificado pelo script
+acima. A câmera começa por ação explícita; frames não são enviados ao backend.
+GREEN/POS/CHROM analisam janela passada de 20 s com qualidade e abstenção.
+Stop libera tracks, encerra worker e descarta séries. Exporte derivados antes de parar.
+Veja [operação e limites do Live Lab](docs/architecture/live-lab.md).
