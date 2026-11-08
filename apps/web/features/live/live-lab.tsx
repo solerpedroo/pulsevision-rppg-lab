@@ -1,13 +1,11 @@
 "use client";
+import { LabSidebar } from "@/components/lab-sidebar";
 import { useEffect, useRef, useState, memo } from "react";
-import Link from "next/link";
 import {
-  Activity,
   Radio,
   ShieldCheck,
   Square,
   Download,
-  Video,
   FlaskConical,
   Info,
 } from "lucide-react";
@@ -170,40 +168,7 @@ export function LiveLab() {
       <a href="#workspace" className="skip">
         Ir ao laboratório
       </a>
-      <aside className="sidebar">
-        <Link href="/video" className="brand">
-          <span className="brand-mark">
-            <Activity size={24} />
-          </span>
-          <span>
-            PulseVision<small>rPPG RESEARCH LAB</small>
-          </span>
-        </Link>
-        <p className="nav-label">WORKSPACE</p>
-        <nav aria-label="Laboratórios">
-          <Link className="nav-item" href="/video">
-            <Video size={18} />
-            Video Lab<span>01</span>
-          </Link>
-          <Link className="nav-item selected" href="/live" aria-current="page">
-            <Radio size={18} />
-            Live Lab<span>02</span>
-          </Link>
-          <a className="nav-item" href="/benchmark">
-            <FlaskConical size={18} />
-            Benchmark<span>03</span>
-          </a>
-        </nav>
-        <div className="sidebar-bottom">
-          <ShieldCheck size={21} />
-          <strong>Processamento no navegador.</strong>
-          <p>
-            Frames não são enviados. Stop libera câmera, worker e séries da
-            sessão.
-          </p>
-          <span className="mono">LIVE ENGINE · V1</span>
-        </div>
-      </aside>
+      <LabSidebar active="live" />
       <div className="lab-main">
         <header className="topbar">
           <div className="breadcrumb">
