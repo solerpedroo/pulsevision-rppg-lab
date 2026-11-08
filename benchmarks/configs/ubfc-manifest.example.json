@@ -1,0 +1,32 @@
+{
+  "schema_version": "benchmark-v1",
+  "dataset": "UBFC-rPPG",
+  "dataset_version": "REPLACE_WITH_RECEIVED_VERSION",
+  "access_record": "../../data/access/ubfc-research-review.json",
+  "access_confirmed": false,
+  "protocol_version": "protocol-v1-PENDING-VALIDATION",
+  "seed": 42,
+  "bootstrap_samples": 1000,
+  "roi": "combined",
+  "model_path": "../../models/face_landmarker.task",
+  "splits": {
+    "development": ["subject1"],
+    "validation": ["subject2"],
+    "test": ["subject3"]
+  },
+  "sessions": [
+    {
+      "participant_id": "subject1",
+      "session_id": "session1",
+      "video": "../../data/raw/UBFC/subject1/vid.avi",
+      "reference": "../../data/raw/UBFC/subject1/ground_truth.txt",
+      "reference_format": "ubfc_text",
+      "alignment": {
+        "verified": false,
+        "reference_origin_s": 0,
+        "offset_s": 0,
+        "evidence_file": null
+      }
+    }
+  ]
+}
