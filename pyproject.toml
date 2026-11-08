@@ -1,6 +1,6 @@
 [project]
 name = "pulsevision-rppg-lab"
-version = "0.1.0"
+version = "1.0.0"
 description = "Local-first experimental rPPG laboratory"
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -22,6 +22,8 @@ dev = [
     "mypy>=1.18,<2",
     "scipy-stubs>=1.18.1.1",
     "httpx2>=2.16.0",
+    "pytest-cov>=7,<8",
+    "pip-audit>=2.9,<3",
 ]
 
 [build-system]
