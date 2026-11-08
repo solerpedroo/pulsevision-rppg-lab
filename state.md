@@ -1,7 +1,8 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 5 — qualidade instrumental, abstenção e continuidade implementadas.
-Próxima onda: 6 — datasets autorizados, ground truth e benchmark científico. Não iniciada.
+Atualizado: 2026-11-07. Onda atual: 6 — infraestrutura de benchmark implementada; avaliação real pendente.
+Próxima onda de engenharia: 7 — API/jobs (depende de 1–5, pode seguir independentemente).
+Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
 ## Contexto e retomada
@@ -310,7 +311,7 @@ Elegibilidade das estatísticas atuais é o agendamento do trace; critérios pr�
 de exclusão de dataset/ground truth serão definidos no runner da Onda 6.
 Pendência de inspeção visual das ROIs em rostos autorizados continua aberta.
 
-## Próxima ação — Onda 6
+## Histórico — preparação da Onda 6
 
 PV-0601–PV-0612: verificar acesso/licença de UBFC-rPPG e, se autorizado, PURE;
 adapters de vídeo/referência com alinhamento temporal verificável; split por
@@ -318,3 +319,78 @@ participante, manifesto/protocolo congelados antes do teste final.
 Implementar métricas MAE/RMSE/MedAE/bias/correlação, cobertura e exclusões,
 agregação por participante e relatórios reproduzíveis. Não inventar dados,
 autorizações, alinhamento ou resultados se o dataset ainda não estiver disponível.
+
+## Onda 6 — infraestrutura entregue, conclusão científica pendente
+
+O usuário confirmou que não possui dataset autorizado. Nenhum UBFC/PURE foi
+baixado, nenhum contato externo foi feito e nenhum resultado em pessoas foi produzido.
+A definição científica de pronto da Onda 6 ainda não foi atingida.
+
+- [x] PV-0601: fontes oficiais e procedimento de acesso consultados; distribuição/
+      termos completos e registro de acesso real ainda pendentes.
+- [x] PV-0602: discovery UBFC e parser PPG/HR/timestamps implementados e testados
+      em fixtures próprias. Formato ainda precisa ser conferido em dados recebidos.
+- [x] PV-0603: parser de referência PURE preparado e acesso acadêmico documentado.
+      Imagens PURE e sua sincronização end-to-end não validadas nesta entrega.
+- [x] PV-0604: manifesto por participante/sessão/condição; split sem vazamento,
+      configuração estrita e freeze verificável por hashes.
+- [x] PV-0605: transformação temporal explícita e evidência externa obrigatória;
+      alinhamento não verificado exclui sessão sem fabricar métricas.
+- [x] PV-0606: referência é HR do sensor ponderada no mesmo interior útil
+      espectral dos métodos, independente de aceitação; gaps/bordas inválidos excluem janela.
+- [x] PV-0607: MAE/RMSE/MedAE/bias/Pearson, cobertura e tempos computacionais.
+- [x] PV-0608: figuras de dispersão, Bland–Altman descritivo, distribuição por
+      participante e cobertura; métricas por método/participante/condição.
+- [x] PV-0609: agregação igual por participante e bootstrap de participantes,
+      com seed/replicações e CI indisponível quando amostra insuficiente.
+- [ ] PV-0610 científico: executar GREEN/CHROM/POS em dataset autorizado e
+      referência temporal verificada. Demo sintética não substitui esse experimento.
+- [ ] PV-0611 científico: investigar falhas em dados reais. Infraestrutura de
+      exclusões/abstenções e testes de falhas já disponível.
+- [x] PV-0612: dados privados/restritos ausentes do Git; evidências exportadas
+      apenas por hash; CSV intermediário do fluxo de vídeo é removido.
+- ADR 0008, protocolo operacional, definição das métricas e registro de acesso
+  documentam escopo, parâmetros e limitações.
+
+## Evidências da infraestrutura da Onda 6
+
+- uv sync --locked: passou; pacote benchmarks incluído no workspace/checagem de tipos.
+- uv run ruff check . e uv run mypy: passaram (53 arquivos fonte).
+- uv run pytest: 198 testes passaram localmente, incluindo 24 novos de benchmark.
+- Testes específicos de benchmark repetidos após revisão do relatório: 24 passaram.
+- npm run lint, npm run typecheck, npm test e npm run build: passaram (2 testes web).
+- npm run format:check e git diff --check: passaram.
+- Testes cobrem fórmulas de erro, split, hashes alterados, gaps de referência,
+  alinhamento recusado, macro por participante, bootstrap, exclusões e reexecução.
+- Fluxo AVI CFR sintético → modelo local real → RGB → benchmark sem face executado;
+  referência artificial não gera erro de BPM quando o estimador se abstém.
+  Em CI sem modelo, esse smoke test é pulado. Nenhuma avaliação em rosto real.
+- Gerador AVI de testes usa base CFR correta; decoder mantém recusa estrita de
+  contagem divergente, sem enfraquecer integridade temporal.
+- Demo local em artifacts/wave6-final-demo/inputs; lock final lock-delivery.json;
+  saída results-delivery/{benchmark-v1.json,benchmark-v1.md,windows.csv,participants.csv,figures/}.
+  São quatro participantes artificiais, 16 janelas por método, 14 aceitas e
+  duas abstenções (movimento simulado e recuperação). Sem exclusões de referência
+  nessa demo. Figuras dos três métodos inspecionadas e rotuladas artificiais.
+- Locks anteriores do desenvolvimento ficam distintos; não reutilizá-los depois
+  de alterações no código. Isso é comportamento esperado, não avaliação final.
+- CI não executada remotamente. Sem commit/push/publicação.
+
+## Limitações e próximos passos
+
+Dataset/licença e evidência física de alinhamento dependem de obtenção legítima.
+access_confirmed/verified são declarações registradas, não autenticação jurídica
+ou descoberta automática de offset. Não retunar parâmetros pelo erro no teste.
+HR do sensor pode ser suavizada/defasada; regra e origem precisam de validação.
+LoA por janela são descritivos com medidas repetidas; CI reamostra participantes
+com pares aceitos e não corrige ausência de dados ou baixa cobertura.
+Macro-RMSE/MedAE são médias das métricas individuais, não versões pooled.
+Participantes/sessões sem pares permanecem explícitos com métricas indisponíveis.
+Pendência visual de ROIs em material autorizado continua aberta.
+
+Para concluir a Onda 6 científica: obter UBFC-rPPG ou PURE pelos responsáveis,
+conferir termos/formato/relógios, validar ROIs/referência em desenvolvimento,
+fixar manifesto e protocolo e só então executar avaliação final.
+A Onda 7 de engenharia pode avançar independentemente conforme dependências do
+plano (1–5): FastAPI local, jobs, limites, cancelamento, exportação e limpeza.
+Isso não encerra nem substitui a avaliação real pendente.
