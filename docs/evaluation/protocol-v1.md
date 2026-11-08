@@ -1,7 +1,8 @@
 # Protocolo metodológico v1
 
 Status: regras metodológicas fixadas; parâmetros e manifesto de dataset pendentes.
-Não houve aquisição de dataset, execução de benchmark nem resultados científicos.
+Não houve aquisição de dataset nem avaliação fisiológica. Na Onda 6 foi implementado
+o runner com teste artificial; manifesto final e avaliação em dados reais continuam pendentes.
 
 ## Particionamento e congelamento
 
@@ -43,3 +44,9 @@ Reportar latência/FPS com hardware, distinguindo aquisição de processamento.
 Cada execução registra protocolo, dataset/versão/licença, participantes, seed, commit,
 ambiente, parâmetros, referência, alinhamento e exclusões. Nunca inventar medidas.
 Teste final só inicia após revisão do protocolo e manifesto congelados.
+
+## Implementação do runner
+
+Especificação operacional: benchmark-v1.md, metric-definitions.md e ADR 0008.
+O lock congela os arquivos/config/código da execução, mas não substitui a revisão
+metodológica prévia nem constitui um pré-registro independente.
