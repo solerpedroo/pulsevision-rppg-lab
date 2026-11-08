@@ -1,15 +1,17 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07. Onda atual: 6 — infraestrutura de benchmark implementada; avaliação real pendente.
-Próxima onda de engenharia: 7 — API/jobs (depende de 1–5, pode seguir independentemente).
+Atualizado: 2026-11-07. Onda atual: 7 — API local/jobs implementados e verificados.
+Próxima onda de engenharia: 8 — UI de Video Lab integrada à API.
 Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
 Validação visual de ROIs em rostos autorizados continua pendente.
 
 ## Contexto e retomada
 
 Leia AGENTS.md, plano original, docs/architecture/overview.md e docs/adrs/.
-A ideia é obter estimativas rPPG rastreáveis ou abstenção, começando pelo núcleo
-offline e só depois API, interface e webcam local. Não há inferência nesta entrega.
+A ideia é obter estimativas rPPG rastreáveis ou abstenção. Aquisição, ROIs/RGB,
+GREEN/CHROM/POS, qualidade e API local estão implementados. A web ainda tem apenas
+a página inicial; Video Lab e webcam ficam para as próximas ondas. Não há
+validação fisiológica em pessoas nem dataset autorizado local.
 
 ## Onda 0 — critérios
 
@@ -52,8 +54,8 @@ offline e só depois API, interface e webcam local. Não há inferência nesta e
 - Política de retenção é requisito futuro, não mecanismo implementado.
 - Schemas não exprimem validadores relacionais Pydantic; TS deve validá-los na
   futura integração. Métodos usam nomes GREEN/CHROM/POS, snake_case nos contratos.
-- Não há API, câmera, upload, dados reais ou validação de precisão. Modelo oficial
-  local disponível desde a Onda 2, fora do Git.
+- API/upload disponíveis desde a Onda 7; UI de vídeo e câmera ainda pendentes.
+  Não há dados reais ou validação de precisão. Modelo oficial local fora do Git.
 - Não houve commit, push, publicação ou modificação do plano original.
 
 ## Histórico — preparação da Onda 1
@@ -394,3 +396,64 @@ fixar manifesto e protocolo e só então executar avaliação final.
 A Onda 7 de engenharia pode avançar independentemente conforme dependências do
 plano (1–5): FastAPI local, jobs, limites, cancelamento, exportação e limpeza.
 Isso não encerra nem substitui a avaliação real pendente.
+
+## Onda 7 — API local e jobs
+
+- [x] PV-0701: FastAPI, healthcheck e OpenAPI de rotas/schemas.
+- [x] PV-0702: streaming binário, limite real de bytes/tempo/slots, assinatura,
+      família MIME/codec e caminho UUID gerado pelo servidor.
+- [x] PV-0703: fila limitada e subprocesso separado por job, supervisionado
+      fora do request; não usar BackgroundTasks para processamento científico.
+- [x] PV-0704: queued/processing/completed/failed/cancelled/expired em SQLite.
+- [x] PV-0705: cancelamento de processo ativo/pendente e isolamento por diretório.
+- [x] PV-0706: status/progresso, estimativas paginadas e séries por janela com stride.
+- [x] PV-0707: exports JSON/CSV/PNG, parâmetros, versões e hashes de entrada/modelo.
+- [x] PV-0708: wall timeout, CPU time, memória virtual, duração, pixels, FPS,
+      frames, tamanho de job/arquivo; host/origin/chave e rate limit.
+- [x] PV-0709: retenção, startup/sweep, restart e DELETE com revogação de acesso.
+- [x] PV-0710: integração com subprocesso real e uploads concorrentes/adversos.
+- ADR 0009, guia de execução e política de privacidade v2 publicados no workspace.
+- AGENTS/README atualizados: API ativa, DSP/decoder não executam nas rotas.
+
+## Evidências da Onda 7
+
+- uv sync --locked: passou; FastAPI 0.162.2, Uvicorn 0.54.0 e AnyIO 4.16.0 pinados.
+  TestClient usa httpx2 compatível com Starlette instalado, sem aviso de depreciação.
+- uv run ruff check . e uv run mypy: passaram (61 arquivos fonte).
+- uv run pytest: 223 testes passaram localmente, 25 novos de API.
+- npm run lint, npm run typecheck, npm test e npm run build: passaram (2 testes web).
+- npm run format:check e git diff --check: passaram.
+- HTTP real com Uvicorn em 127.0.0.1:8765: POST→202, health→200 durante job,
+  completed, resultado sem BPM em vídeo sintético sem face, exports JSON/CSV/PNG→200,
+  original ausente, DELETE→204 e GET posterior→404. Servidor encerrado após teste.
+- Health medido em uma requisição: 1,77 ms (smoke, não benchmark de desempenho).
+- Teste adicional suspendeu subprocesso ativo com SIGSTOP: health respondeu e
+  cancelamento forçou encerramento/removendo artefatos, sem processo órfão.
+- Upload desconectado/timeout, chunked acima do limite, MIME inválido, vídeo
+  truncado, limite de memória, erro de spawn, TTL/restart/limpeza também testados.
+- CI agora busca explicitamente o modelo oficial versionado e valida SHA256
+  (cache com chave do hash), para executar integrações em vez de pular por falta
+  de pesos. Nenhum vídeo/dataset humano baixado. CI não executada remotamente.
+- Testes offline sem pesos ainda pulam integrações que exigem modelo.
+- Sem commit/push/publicação. Evidência detalhada em docs/verification/wave7.md.
+
+## Operação e limites atuais da API
+
+Executar da raiz: uv run uvicorn services.api.app.main:app --host 127.0.0.1
+--port 8000 --workers 1 --no-access-log. Modelo é configurado localmente; API não baixa pesos.
+Uma instância por storage, Linux/Fedora; não é serviço público/multiusuário.
+Limite de memória é RLIMIT_AS; não é sandbox completa ou quota global de disco.
+Vídeos originais são removidos em estado terminal; derivados expiram em 24 h.
+Serviço desligado não executa timer independente; startup limpa sobras de crash.
+Cancel de job já concluído é recusado; para descartar resultados, usar DELETE.
+É API de arquivos voluntários, sem captura nem streaming de webcam.
+A avaliação científica real da Onda 6 e inspeção de ROIs em rostos autorizados
+continuam pendentes e não foram substituídas pelos testes de API.
+
+## Próxima ação — Onda 8
+
+PV-0801–PV-0810: shell/navegação e Video Lab, consentimento/informação de destino
+e retenção antes do envio, validação do arquivo, integração de job/cancel/delete,
+timeline/gráficos/resultados e exportação explícita. Preservar BPM null e motivos.
+Consumir body binário (não multipart), paginação/séries/índice de janela da API.
+Adicionar fluxo E2E de vídeo e acessibilidade. Não implementar câmera antes da Onda 9.
