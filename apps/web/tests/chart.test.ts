@@ -43,3 +43,23 @@ it("ausência não cria curva e amplitude constante não divide por zero", () =>
   expect(constant).not.toMatch(/NaN|Infinity/);
   expect(constant).toContain("<path");
 });
+
+it("mantém variação pequena legível e descarta coordenada não finita", () => {
+  const html = renderToStaticMarkup(
+    createElement(Chart, {
+      ...labels,
+      points: [
+        { x: NaN, y: null },
+        { x: 0, y: 1e-8 },
+        { x: 1, y: 2e-8 },
+      ],
+    }),
+  );
+  expect(html).not.toMatch(/NaN|Infinity/);
+  expect(html).toContain("e-");
+  const path = html.match(/<path d="([^"]*)"/)?.[1];
+  const ys = [...(path ?? "").matchAll(/,([\d.]+)/g)].map((match) =>
+    Number(match[1]),
+  );
+  expect(Math.abs(ys[0] - ys[1])).toBeGreaterThan(50);
+});
