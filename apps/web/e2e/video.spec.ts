@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+const apiUrl = `http://127.0.0.1:${process.env.PULSEVISION_API_PORT ?? "8000"}`;
 const root = path.resolve(__dirname, "../../..");
 test.beforeAll(() => {
   execFileSync("uv", ["run", "python", "scripts/generate_browser_fixture.py"], {
@@ -52,9 +53,7 @@ test("upload real, abstenção, revisão, exportação, recálculo e exclusão",
   ).toHaveCount(1);
   await expect(page.locator(".roi-overlay polygon")).toHaveCount(0);
   const results = await (
-    await request.get(
-      `http://127.0.0.1:8000/api/v1/videos/jobs/${job.id}/results`,
-    )
+    await request.get(`${apiUrl}/api/v1/videos/jobs/${job.id}/results`)
   ).json();
   expect(results.items[0].bpm).toBeNull();
   expect(results.items[0].roi).toBe("forehead");
@@ -94,9 +93,7 @@ test("upload real, abstenção, revisão, exportação, recálculo e exclusão",
   };
   expect(next.id).not.toBe(job.id);
   expect(
-    (
-      await request.get(`http://127.0.0.1:8000/api/v1/videos/jobs/${job.id}`)
-    ).status(),
+    (await request.get(`${apiUrl}/api/v1/videos/jobs/${job.id}`)).status(),
   ).toBe(404);
   await expect(
     page.getByText("Análise disponível", { exact: true }),
@@ -107,9 +104,7 @@ test("upload real, abstenção, revisão, exportação, recálculo e exclusão",
   await expect(page.locator("video")).toHaveCount(0);
   await expect(page.getByRole("checkbox")).not.toBeChecked();
   expect(
-    (
-      await request.get(`http://127.0.0.1:8000/api/v1/videos/jobs/${next.id}`)
-    ).status(),
+    (await request.get(`${apiUrl}/api/v1/videos/jobs/${next.id}`)).status(),
   ).toBe(404);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => window.scrollTo(0, 0));
@@ -149,7 +144,7 @@ test("validação de arquivo e recuperação da conexão", async ({ page }) => {
       body: JSON.stringify({ detail: "service_unavailable" }),
     }),
   );
-  await page.getByLabel("Endereço da API").fill("http://127.0.0.1:8000");
+  await page.getByLabel("Endereço da API").fill(apiUrl);
   await page.getByRole("button", { name: "Conectar", exact: true }).click();
   await expect(
     page.getByText("API indisponível", { exact: true }),
@@ -176,7 +171,9 @@ test("cancelamento e falha têm estados explícitos (API simulada)", async ({
   await page.route("**/api/v1/videos/jobs**", async (route) => {
     const request = route.request(),
       pathname = new URL(request.url()).pathname;
-    const headers = { "access-control-allow-origin": "http://localhost:3000" };
+    const headers = {
+      "access-control-allow-origin": `http://localhost:${process.env.PULSEVISION_WEB_PORT ?? "3000"}`,
+    };
     if (request.method() === "DELETE")
       return route.fulfill({ status: 204, headers });
     if (pathname.endsWith("/cancel"))
