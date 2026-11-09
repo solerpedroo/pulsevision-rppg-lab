@@ -113,7 +113,10 @@ export function LiveLab() {
               setStale(true);
               setPhase("abstention");
             },
-            freshnessDelayMs(frame.analysis, frame.timestamp_s),
+            Math.max(
+              250,
+              freshnessDelayMs(frame.analysis, frame.timestamp_s),
+            ),
           );
         const fresh =
           frame.analysis && frame.timestamp_s - frame.analysis.end_s <= 3
@@ -131,10 +134,10 @@ export function LiveLab() {
           return fresh;
         });
         setPhase(
-          frame.display_reasons.length || fresh?.bpm === null
-            ? "abstention"
-            : fresh?.bpm != null
-              ? "result"
+          fresh?.bpm != null
+            ? "result"
+            : frame.display_reasons.length || fresh?.bpm === null
+              ? "abstention"
               : "warmup",
         );
       },
@@ -387,7 +390,7 @@ export function LiveLab() {
               <span>ESTIMATIVA EXPERIMENTAL</span>
               <div>
                 <strong>
-                  {analysis?.bpm != null && !reasons.length
+                  {analysis?.bpm != null
                     ? analysis.bpm.toFixed(1)
                     : "—"}
                 </strong>
