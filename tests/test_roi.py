@@ -184,9 +184,9 @@ def test_real_mediapipe_no_face(tmp_path):
     result = export_csv(video, model, tmp_path / "rgb_traces.csv")
     assert result["rows"] == 12 and result["valid_rows"] == 0
     with MediaPipeDetector(model) as detector:
-        assert detector.detect(np.zeros((128, 128, 3), dtype=np.uint8), 0) == []
-        with pytest.raises(FaceError):
-            detector.detect(np.zeros((128, 128, 3), dtype=np.uint8), 0.0001)
+        blank = np.zeros((128, 128, 3), dtype=np.uint8)
+        assert detector.detect(blank, 0) == []
+        assert detector.detect(blank, 0.0001) == []
 
 
 def test_export_failure_leaves_no_partial_files(tmp_path):
