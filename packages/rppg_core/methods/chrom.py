@@ -15,6 +15,13 @@ def chrom(
     """Windowed chrominance projection, per-component filtering and Hann overlap-add."""
     validate_rgb(rgb, fs)
     length = int(np.ceil(method_config.projection_window_s * fs - 1e-9))
+    sections = signal.butter(
+        config.filter_order, [config.low_hz, config.high_hz], btype="bandpass", fs=fs, output="sos"
+    )
+    # sosfiltfilt pad must fit inside each projection window.
+    minimum = 3 * (2 * len(sections) + 1) + 1
+    if length < minimum:
+        length = minimum
     length += length % 2
     if length < 4 or length > len(rgb):
         raise SignalQualityError("projection_window_too_short")
