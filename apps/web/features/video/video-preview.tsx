@@ -68,15 +68,28 @@ export function VideoPreview({
             >
               {Object.entries(overlay.regions)
                 .filter(([name]) => roi === "combined" || name === roi)
-                .map(([name, polygon]) => (
-                  <polygon
-                    key={name}
-                    points={polygon.map((pair) => pair.join(",")).join(" ")}
-                    fill="rgba(177,245,114,.18)"
-                    stroke="#bcf775"
-                    strokeWidth=".003"
-                  />
-                ))}
+                .map(([name, polygon]) => {
+                  const rings =
+                    polygon.length && Array.isArray(polygon[0][0])
+                      ? (polygon as number[][][])
+                      : [polygon as number[][]];
+                  const d = rings
+                    .map(
+                      (ring) =>
+                        `M ${ring.map((pair) => pair.join(",")).join(" L ")} Z`,
+                    )
+                    .join(" ");
+                  return (
+                    <path
+                      key={name}
+                      d={d}
+                      fill="rgba(177,245,114,.18)"
+                      stroke="#bcf775"
+                      strokeWidth=".003"
+                      fillRule="evenodd"
+                    />
+                  );
+                })}
             </svg>
           )}
         </>
