@@ -188,7 +188,7 @@ export function uniform(rows: Sample[]) {
   });
 }
 export function analyze(
-  rows: Sample[],
+  samples: Sample[],
   method: Method,
   roi: Roi,
   start: number,
@@ -210,7 +210,40 @@ export function analyze(
     version: "live-v1",
   };
   try {
-    if (rows.length < 3) fail("insufficient_data");
+    if (samples.length < 3) fail("insufficient_data");
+    const fatal = new Set(["no_face", "multiple_faces", "invalid_geometry"]);
+    const advisory = new Set(["partial_roi"]);
+    const faceFailures = samples.filter((s) =>
+      s.reasons.some((reason) => fatal.has(reason)),
+    );
+    if (faceFailures.length / samples.length > 1 - q.min_temporal_coverage) {
+      result.reasons = [
+        ...new Set(
+          faceFailures.flatMap((s) =>
+            s.reasons.filter((reason) => fatal.has(reason)),
+          ),
+        ),
+      ];
+      return result;
+    }
+    const valid = samples.filter(
+      (s) =>
+        s.reasons.every((reason) => advisory.has(reason)) &&
+        s.rgb &&
+        s.rgb.every((v) => Number.isFinite(v) && v >= 0 && v <= 255),
+    );
+    if (valid.length < 3) {
+      const bad = [...new Set(samples.flatMap((s) => s.reasons))];
+      result.reasons = bad.length ? bad : ["invalid_roi_samples"];
+      return result;
+    }
+    const missing = samples.length - valid.length;
+    if (missing / samples.length > 1 - q.min_temporal_coverage) {
+      const bad = [...new Set(samples.flatMap((s) => s.reasons))];
+      result.reasons = bad.length ? bad : ["low_temporal_coverage"];
+      return result;
+    }
+    const rows = valid;
     const times = rows.map((s) => s.timestamp_s);
     if (
       times.some(
@@ -226,27 +259,19 @@ export function analyze(
       sorted = [...intervals].sort((a, b) => a - b),
       mid = Math.floor(sorted.length / 2),
       median =
-        sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        sorted.length >= 3 && sorted.length % 2 === 1
+          ? (sorted[mid - 1] + sorted[mid] + sorted[mid + 1]) / 3
+          : sorted.length % 2
+            ? sorted[mid]
+            : (sorted[mid - 1] + sorted[mid]) / 2,
+      edge = Math.min(0.15, 2.5 * median);
     result.effective_fps = (rows.length - 1) / (times.at(-1)! - times[0]);
-    const bad = [...new Set(rows.flatMap((s) => s.reasons))];
-    if (bad.length) {
-      result.reasons = bad;
-      return result;
-    }
-    if (
-      rows.some(
-        (s) =>
-          !s.rgb || s.rgb.some((v) => !Number.isFinite(v) || v < 0 || v > 255),
-      )
-    )
-      fail("invalid_roi_samples");
     if (1 / median < 12) fail("insufficient_nyquist");
-    if (Math.max(...intervals) > Math.min(0.15, 2.5 * median))
-      fail("temporal_gap");
+    if (Math.max(...intervals) > edge) fail("temporal_gap");
     if (
       end - start < 20 - 1e-8 ||
-      times[0] - start > 1.5 * median ||
-      end - times.at(-1)! > 1.5 * median
+      times[0] - start > edge ||
+      end - times.at(-1)! > edge
     )
       fail("window_too_short");
     const cv = std(intervals) / mean(intervals),
@@ -317,9 +342,9 @@ export class Continuity {
     }
     this.last = r.end_s;
     if (r.bpm === null) {
-      this.baseline = this.pending = null;
       this.count = 0;
-      this.recovering = true;
+      this.pending = null;
+      if (this.baseline === null) this.recovering = true;
       return r;
     }
     const changed =
