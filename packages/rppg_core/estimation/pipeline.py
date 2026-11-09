@@ -15,6 +15,8 @@ from rppg_core.signals.spectrum import bandpass, spectrum
 from rppg_core.signals.temporal import (
     SignalInputError,
     SignalQualityError,
+    robust_interval,
+    sampling_rate,
     uniform_trace,
     validate_trace,
 )
@@ -105,7 +107,7 @@ def analyze_window(
             assessment.metrics["valid_sample_fraction"] = float(valid.mean())
         if valid is not None and not valid.all():
             raise SignalQualityError("invalid_roi_samples")
-        if 1 / float(np.median(np.diff(timestamps))) / 2 <= config.high_hz:
+        if sampling_rate(robust_interval(np.diff(timestamps))) / 2 <= config.high_hz:
             raise SignalQualityError("insufficient_nyquist")
         assessment.evaluated_checks.append("timestamp_resampling")
         trace = uniform_trace(
@@ -116,20 +118,26 @@ def analyze_window(
         )
         estimate.metadata["resampled"] = trace.resampled
         estimate.metadata["resample_fs"] = trace.fs
+        edge_s = min(config.max_gap_s, config.max_interval_ratio / trace.fs)
         if (
             end_s - start_s < config.window_s - 1e-8
-            or timestamps[0] - start_s > 1.5 / trace.fs
-            or end_s - timestamps[-1] > 1.5 / trace.fs
+            or timestamps[0] - start_s > edge_s + 1e-9
+            or end_s - timestamps[-1] > edge_s + 1e-9
         ):
             raise SignalQualityError("window_too_short")
+        stage_reasons: list[str] = []
+        stage_status = estimate.status
         for decision in (
             quality_service.temporal(timestamps, start_s, end_s, assessment),
             quality_service.illumination(rgb, evidence, assessment),
         ):
             if decision.reasons:
-                estimate.status = decision.status
-                estimate.reasons = list(decision.reasons)
-                return result
+                stage_reasons.extend(decision.reasons)
+                stage_status = decision.status
+        if stage_reasons:
+            estimate.status = stage_status
+            estimate.reasons = sorted(set(stage_reasons))
+            return result
         assessment.evaluated_checks.append("method_extraction")
         extracted = extractor(trace.rgb, trace.fs, config, method_config)
         filtered = (
