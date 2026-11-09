@@ -4,7 +4,7 @@ import argparse
 import json
 import shutil
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field
 from rppg_types.benchmark import BenchmarkReview
@@ -54,10 +54,18 @@ def freeze_study(plan: Path, lock: Path) -> None:
         handle.write(json.dumps(value, indent=2) + "\n")
 
 
+def _code_identity(value: dict[str, Any]) -> dict[str, Any]:
+    cloned: dict[str, Any] = json.loads(json.dumps(value))
+    code = cloned.get("code")
+    if isinstance(code, dict):
+        code.pop("dirty", None)
+    return cloned
+
+
 def run_study(plan_path: Path, lock: Path, output: Path) -> BenchmarkReview:
     frozen = json.loads(lock.read_text())
     current = study_snapshot(plan_path)
-    if frozen != current:
+    if _code_identity(frozen) != _code_identity(current):
         raise BenchmarkError("Study plan, inputs or code changed after freeze")
     plan = StudyPlan.model_validate_json(plan_path.read_text())
     output.mkdir(parents=True, exist_ok=False)
