@@ -109,16 +109,22 @@ def run(directory: Path, options: dict[str, Any]) -> None:
 
         polygons = {}
         for name, mask in masks.items():
-            contours, _ = cv2.findContours(
-                mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            contours, hierarchy = cv2.findContours(
+                mask.astype(np.uint8), cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE
             )
-            if contours:
-                contour = max(contours, key=cv2.contourArea)
+            height, width = mask.shape
+            scale_x = max(width - 1, 1)
+            scale_y = max(height - 1, 1)
+            rings = []
+            for contour in contours:
                 contour = cv2.approxPolyDP(contour, 1.5, True).reshape(-1, 2)
-                height, width = mask.shape
-                polygons[name] = [
-                    [float(x) / (width - 1), float(y) / (height - 1)] for x, y in contour
-                ]
+                if len(contour) >= 3:
+                    rings.append(
+                        [[float(x) / scale_x, float(y) / scale_y] for x, y in contour]
+                    )
+            if rings:
+                polygons[name] = rings
+            del hierarchy
         roi_points.append({"timestamp_s": timestamp, "regions": polygons})
 
     export_csv(
@@ -244,7 +250,8 @@ def main() -> int:
     resource.setrlimit(
         resource.RLIMIT_AS, (options["memory_limit_bytes"], options["memory_limit_bytes"])
     )
-    resource.setrlimit(resource.RLIMIT_FSIZE, (128 * 1024**2, 128 * 1024**2))
+    file_limit = int(options.get("max_job_bytes", 256 * 1024**2))
+    resource.setrlimit(resource.RLIMIT_FSIZE, (file_limit, file_limit))
     try:
         run(directory, options)
         return 0
