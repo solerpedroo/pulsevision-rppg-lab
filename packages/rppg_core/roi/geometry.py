@@ -17,10 +17,15 @@ EXCLUSIONS = (
 )
 
 
-def orient_rgb(rgb: NDArray[np.uint8], rotation_degrees: int) -> NDArray[np.uint8]:
-    if rotation_degrees % 90:
+def orient_rgb(
+    rgb: NDArray[np.uint8], rotation_degrees: int, mirrored: bool = False
+) -> NDArray[np.uint8]:
+    quarter = int(round(rotation_degrees / 90))
+    if abs(rotation_degrees - quarter * 90) > 2:
         raise ValueError("Only quarter-turn display rotations are supported")
-    return np.ascontiguousarray(np.rot90(rgb, k=rotation_degrees // 90))
+    if mirrored:
+        rgb = np.ascontiguousarray(rgb[:, ::-1])
+    return np.ascontiguousarray(np.rot90(rgb, k=quarter % 4))
 
 
 def bgr_to_rgb(bgr: NDArray[np.uint8]) -> NDArray[np.uint8]:
@@ -36,8 +41,9 @@ def polygon_mask(
 ) -> NDArray[np.bool_]:
     if points.ndim != 2 or points.shape[1] != 2 or len(points) < 3:
         raise ValueError("Polygon requires at least three 2D vertices")
-    if not np.isfinite(points).all() or (points < 0).any() or (points > 1).any():
+    if not np.isfinite(points).all() or (points < -0.02).any() or (points > 1.02).any():
         raise ValueError("Polygon outside normalized image bounds")
+    points = np.clip(points, 0, 1)
     if not 0 < shrink <= 1 or width <= 0 or height <= 0:
         raise ValueError("Invalid polygon dimensions/shrink")
     center = points.mean(axis=0)
@@ -59,8 +65,16 @@ def region_masks(
         raise ValueError("Expected 478 finite 2D landmarks")
     excluded = np.zeros((height, width), dtype=bool)
     for excluded_indices in EXCLUSIONS:
-        excluded |= polygon_mask(landmarks[list(excluded_indices)], width, height, shrink=1)
+        try:
+            excluded |= polygon_mask(landmarks[list(excluded_indices)], width, height, shrink=1)
+        except ValueError:
+            continue
     masks = {}
     for name, indices in REGIONS.items():
-        masks[name] = polygon_mask(landmarks[list(indices)], width, height) & ~excluded
+        try:
+            masks[name] = polygon_mask(landmarks[list(indices)], width, height) & ~excluded
+        except ValueError:
+            continue
+    if not masks:
+        raise ValueError("Degenerate ROI")
     return masks
