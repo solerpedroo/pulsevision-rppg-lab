@@ -70,6 +70,17 @@ it("rejeita constante, janela curta, face ausente e gaps sem carry-forward", () 
       0,
       20,
     ).reasons,
+  ).not.toContain("no_face");
+  expect(
+    analyze(
+      rows.map((s, i) =>
+        i % 5 === 0 ? sample(s.timestamp_s, null, ["no_face"]) : s,
+      ),
+      "POS",
+      "combined",
+      0,
+      20,
+    ).reasons,
   ).toContain("no_face");
   expect(
     analyze(
@@ -84,8 +95,10 @@ it("rejeita constante, janela curta, face ausente e gaps sem carry-forward", () 
     history = new Continuity();
   expect(history.apply(valid).bpm).not.toBeNull();
   history.apply({ ...valid, bpm: null, end_s: 21, reasons: ["no_face"] });
-  expect(history.apply({ ...valid, end_s: 22 }).bpm).toBeNull();
-  expect(history.apply({ ...valid, end_s: 23 }).bpm).not.toBeNull();
+  expect(history.apply({ ...valid, end_s: 22 }).bpm).not.toBeNull();
+  expect(
+    history.apply({ ...valid, bpm: (valid.bpm ?? 0) + 40, end_s: 23 }).bpm,
+  ).toBeNull();
 });
 it("buffer limitado mantém null e rejeita tempo duplicado", () => {
   const buffer = new RingBuffer(3);
@@ -112,7 +125,7 @@ it("rejeição atual bloqueia display sem alterar a janela histórica", () => {
   expect(guard.apply(analysis, sample(20.1, null, ["no_face"]))).toEqual([
     "no_face",
   ]);
-  expect(guard.apply(analysis, sample(20.2))).toEqual(["no_face"]);
+  expect(guard.apply(analysis, sample(20.2))).toEqual([]);
   expect(analysis.bpm).not.toBeNull();
   expect(analysis.reasons).toEqual([]);
   expect(guard.apply({ ...analysis, end_s: 21 }, sample(21))).toEqual([]);
