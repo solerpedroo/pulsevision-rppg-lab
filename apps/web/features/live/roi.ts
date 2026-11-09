@@ -22,13 +22,17 @@ export function inside(x: number, y: number, polygon: Polygon) {
   return hit;
 }
 function polygon(points: Polygon, indices: number[], shrink: number): Polygon {
-  const vertices = indices.map((i) => points[i]);
-  if (
-    vertices.some(
-      (p) => !p || p.some((v) => !Number.isFinite(v) || v < 0 || v > 1),
-    )
-  )
-    throw new Error("invalid_geometry");
+  const vertices = indices.map((i) => {
+    const point = points[i];
+    if (!point || point.some((v) => !Number.isFinite(v)))
+      throw new Error("invalid_geometry");
+    if (point.some((v) => v < -0.02 || v > 1.02))
+      throw new Error("invalid_geometry");
+    return [Math.min(1, Math.max(0, point[0])), Math.min(1, Math.max(0, point[1]))] as [
+      number,
+      number,
+    ];
+  });
   const center = [0, 1].map(
     (k) => vertices.reduce((s, p) => s + p[k], 0) / vertices.length,
   );
@@ -83,14 +87,22 @@ export class Extractor {
       points.some((p) => p.length !== 2 || p.some((v) => !Number.isFinite(v)))
     )
       return empty("invalid_geometry");
-    let exclusions: Polygon[];
-    try {
-      exclusions = cfg.exclusions.map((indices) => polygon(points, indices, 1));
-      for (const [roi, indices] of Object.entries(cfg.regions))
-        polygons[roi as Roi] = polygon(points, indices, 0.85);
-    } catch {
-      return empty("invalid_geometry");
+    const exclusions: Polygon[] = [];
+    for (const indices of cfg.exclusions) {
+      try {
+        exclusions.push(polygon(points, indices, 1));
+      } catch {
+        /* One collapsed exclusion does not discard the cheeks and forehead. */
+      }
     }
+    for (const [name, indices] of Object.entries(cfg.regions)) {
+      try {
+        polygons[name as Roi] = polygon(points, indices, 0.85);
+      } catch {
+        /* The region loop below records invalid_geometry for this ROI only. */
+      }
+    }
+    if (!Object.keys(polygons).length) return empty("invalid_geometry");
     const common: string[] = [];
     let motion = 0;
     const bounds = (p: Polygon) =>
@@ -114,14 +126,28 @@ export class Extractor {
         ) / scale;
       if (motion > q.max_motion || Math.abs(bounds(points) / scale - 1) > 0.2)
         common.push("excessive_motion");
-    } else common.push("tracking_interrupted");
+    }
     if (this.previousTime !== null && timestamp - this.previousTime > 0.25)
       common.push("tracking_interrupted");
     this.previous = points.map((p) => [...p]);
     this.previousTime = timestamp;
     // Pixel centers, normalized to the analyzed image; no BGR conversion or mirrored input.
     for (const roi of ROIS.filter((r) => r !== "combined")) {
-      const shape = polygons[roi]!;
+      const shape = polygons[roi];
+      if (!shape) {
+        values[roi] = {
+          timestamp_s: timestamp,
+          rgb: null,
+          reasons: [...common, "invalid_geometry"],
+          brightness: null,
+          valid_fraction: 0,
+          valid_pixels: 0,
+          dark_fraction: 0,
+          saturated_fraction: 0,
+          motion,
+        };
+        continue;
+      }
       let area = 0,
         count = 0,
         dark = 0,
@@ -182,6 +208,7 @@ export class Extractor {
           Math.abs(bright - prior) / Math.max(prior, 1) > q.max_brightness_step
         )
           reasons.push("illumination_change");
+      if (bright !== null && !reasons.includes("illumination_change"))
         this.brightness[roi] = bright;
       }
       values[roi] = {
@@ -197,23 +224,37 @@ export class Extractor {
       };
     }
     const parts = ROIS.filter((r) => r !== "combined").map((r) => values[r]),
-      weights = parts.reduce((s, p) => s + p.valid_pixels, 0),
-      reasons = [...new Set(parts.flatMap((p) => p.reasons))];
-    if (parts.some((p) => !p.rgb)) reasons.push("partial_roi");
+      usable = parts.filter((p) => p.rgb),
+      weights = usable.reduce((s, p) => s + p.valid_pixels, 0),
+      reasons = [
+        ...new Set([
+          ...usable.flatMap((p) => p.reasons),
+          ...(usable.length === parts.length ? [] : ["partial_roi"]),
+          ...parts.filter((p) => !p.rgb).flatMap((p) => p.reasons),
+        ]),
+      ];
     values.combined = {
       timestamp_s: timestamp,
-      rgb: reasons.length
-        ? null
-        : ([0, 1, 2].map(
-            (k) =>
-              parts.reduce((s, p) => s + p.rgb![k] * p.valid_pixels, 0) /
-              weights,
-          ) as RGB),
-      reasons,
-      brightness: parts.every((p) => p.brightness !== null)
-        ? parts.reduce((s, p) => s + p.brightness!, 0) / 3
+      rgb:
+        usable.length && weights
+          ? ([0, 1, 2].map(
+              (k) =>
+                usable.reduce((s, p) => s + p.rgb![k] * p.valid_pixels, 0) /
+                weights,
+            ) as RGB)
+          : null,
+      reasons: usable.length
+        ? usable.length === parts.length
+          ? []
+          : ["partial_roi"]
+        : reasons,
+      brightness: usable.length
+        ? usable.reduce((s, p) => s + (p.brightness ?? 0) * p.valid_pixels, 0) /
+          weights
         : null,
-      valid_fraction: Math.min(...parts.map((p) => p.valid_fraction)),
+      valid_fraction: usable.length
+        ? Math.min(...usable.map((p) => p.valid_fraction))
+        : 0,
       valid_pixels: weights,
       dark_fraction: Math.max(...parts.map((p) => p.dark_fraction)),
       saturated_fraction: Math.max(...parts.map((p) => p.saturated_fraction)),
