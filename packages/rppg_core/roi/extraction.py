@@ -26,6 +26,8 @@ class ExtractionConfig:
     max_scale_change: float = 0.2
     max_brightness_change: float = 0.2
     max_tracking_gap_s: float = 0.25
+    max_dark_fraction: float = 0.4
+    max_saturated_fraction: float = 0.1
 
     def __post_init__(self) -> None:
         if self.single_face_only is not True:
