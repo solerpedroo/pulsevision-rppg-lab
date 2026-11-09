@@ -7,7 +7,7 @@ from scipy import signal
 
 from rppg_core.signals.config import SignalConfig
 from rppg_core.signals.spectrum import select_peak, spectrum
-from rppg_core.signals.temporal import FloatArray, SignalInputError
+from rppg_core.signals.temporal import FloatArray, SignalInputError, robust_interval
 
 from .config import QualityConfig
 from .reasons import ReasonCode
@@ -69,8 +69,9 @@ class SignalQualityService:
             "unstable_geometry": "excessive_motion",
             "tracking_gap": "tracking_interrupted",
             "tracking_reset": "tracking_interrupted",
-            "temporal_gap": "temporal_gap",
             "partial_roi": "partial_roi",
+            "dark_roi": "dark_roi",
+            "saturated_roi": "saturated_roi",
             "illumination_change": "illumination_change",
             "insufficient_pixels": "insufficient_pixels",
             "low_valid_fraction": "low_valid_fraction",
@@ -84,7 +85,12 @@ class SignalQualityService:
             elif item.landmark_status != "ok":
                 reasons.add(ReasonCode.INVALID_ROI_SAMPLES)
             reasons.update(mapping[flag] for flag in item.flags if flag in mapping)
-            informational = {"synthetic_reference", "dark_pixels", "saturated_pixels"}
+            informational = {
+                "synthetic_reference",
+                "dark_pixels",
+                "saturated_pixels",
+                "temporal_gap",
+            }
             unknown = set(item.flags) - set(mapping) - informational
             if unknown:
                 reasons.add(ReasonCode.UNKNOWN_QUALITY_FLAG)
@@ -139,7 +145,7 @@ class SignalQualityService:
         report: QualityAssessment,
     ) -> QualityDecision:
         intervals = np.diff(timestamps)
-        median = float(np.median(intervals))
+        median = robust_interval(intervals)
         cv = float(intervals.std() / intervals.mean())
         coverage = min(1.0, len(timestamps) * median / (end_s - start_s))
         report.evaluated_checks.append("sampling_integrity")
