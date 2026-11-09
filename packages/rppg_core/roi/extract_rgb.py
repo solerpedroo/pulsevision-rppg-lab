@@ -63,9 +63,8 @@ def export_csv(
             writer = csv.DictWriter(handle, fieldnames=FIELDS)
             writer.writeheader()
             with MediaPipeDetector(model) as detector:
-                for row in RGBExtractor(detector, config, on_regions=on_regions).extract(
-                    reader or VideoReader(video)
-                ):
+                extractor = RGBExtractor(detector, config, on_regions=on_regions)
+                for row in extractor.extract(reader or VideoReader(video)):
                     means = row.sample.rgb_mean if row.sample else ["", "", ""]
                     stats = row.stats
                     writer.writerow(
@@ -97,6 +96,7 @@ def export_csv(
             "roi_version": "roi-v1",
             "model_sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
             "timestamp_origin": "first_decoded_frame",
+            "source_origin_s": extractor.source_origin_s,
             "rgb_scale": "RGB24 0-255",
             "display_orientation_applied": True,
             "config": asdict(config),
