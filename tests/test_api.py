@@ -302,6 +302,7 @@ def test_worker_address_space_limit_cleans_up(configured, tmp_path):
         identifier = response.json()["id"]
         result = wait_terminal(api, identifier)
         assert result["status"] == "failed"
+        assert result["error"] in {"memory_limit", "worker_terminated"}
         assert not (configured.root / "jobs" / identifier).exists()
 
 
