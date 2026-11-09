@@ -1,6 +1,9 @@
 # Estado do projeto
 
-Atualizado: 2026-11-08. Onda atual: 11 — engenharia e preparação local v1.0.0 concluídas.
+Atualizado: 2026-11-09. Onda atual: 11 — engenharia e preparação local v1.0.0 concluídas.
+Correções da revisão local aplicadas no working tree; ainda sem commit.
+Evidência: uv run ruff check e uv run mypy sem achados; uv run pytest 240 passou;
+npm test em apps/web 31 passou; npm run typecheck em apps/web passou.
 As ondas de engenharia do plano terminaram; avaliação científica das Ondas 6/10 permanece pendente.
 Não há release remota, deploy, tag ou publicação autorizada.
 Pendência científica da Onda 6: obter dataset autorizado e executar avaliação congelada.
