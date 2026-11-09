@@ -125,8 +125,17 @@ def digest(path: Path) -> str:
     return hasher.hexdigest()
 
 
-def resolve(base: Path, value: str) -> Path:
-    return (base / value).resolve()
+def resolve(base: Path, value: str, *, allow_absolute: bool = False) -> Path:
+    raw = Path(value)
+    root = base.resolve()
+    if raw.is_absolute():
+        if not allow_absolute:
+            raise BenchmarkError("Manifest paths must stay inside the manifest directory")
+        return raw.resolve()
+    resolved = (root / raw).resolve()
+    if not resolved.is_relative_to(root):
+        raise BenchmarkError("Manifest path escapes the manifest directory")
+    return resolved
 
 
 def code_state() -> dict[str, str | bool | None]:
@@ -160,7 +169,7 @@ def snapshot(path: Path) -> dict[str, object]:
         raise BenchmarkError("Access record is empty")
     files = {"access_record": digest(resolve(base, manifest.access_record))}
     if manifest.model_path:
-        files["face_model"] = digest(resolve(base, manifest.model_path))
+        files["face_model"] = digest(resolve(base, manifest.model_path, allow_absolute=True))
     for session in manifest.sessions:
         key = session.participant_id + "/" + session.session_id
         files[key + "/reference"] = digest(resolve(base, session.reference))
