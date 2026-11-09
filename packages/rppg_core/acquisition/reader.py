@@ -40,6 +40,7 @@ class FrameSample:
     rgb: NDArray[np.uint8]
     rotation_degrees: int
     quality_flags: tuple[str, ...]
+    mirrored: bool = False
 
 
 class TimestampValidator:
@@ -61,6 +62,36 @@ class TimestampValidator:
             self.origin = current
         self.previous = current
         return float(current - self.origin), float(current)
+
+
+def display_orientation(frame: av.VideoFrame) -> tuple[int, bool]:
+    """Quarter turn plus an optional horizontal mirror, from the display matrix.
+
+    `frame.rotation` drops the mirror and can report a flipped clip as 180 degrees.
+    """
+    matrix = next(
+        (
+            item
+            for kind, item in frame.side_data.items()
+            if getattr(kind, "name", "") == "DISPLAYMATRIX"
+        ),
+        None,
+    )
+    if matrix is None:
+        angle = int(frame.rotation)
+        quarter = int(round(angle / 90))
+        if abs(angle - quarter * 90) > 2:
+            raise ValueError("Only quarter-turn display rotations are supported")
+        return quarter * 90, False
+    values = np.frombuffer(bytes(matrix), dtype=np.int32)
+    if values.size != 9:
+        raise ValueError("Display matrix has an unexpected size")
+    linear = values.reshape(3, 3)[:2, :2].astype(np.float64) / 65536
+    mirrored = bool(np.linalg.det(linear) < 0)
+    if mirrored:
+        linear = linear @ np.array([[-1.0, 0.0], [0.0, 1.0]])
+    angle = int(round(np.degrees(np.arctan2(linear[1, 0], linear[0, 0])) / 90) * 90)
+    return angle, mirrored
 
 
 class VideoReader:
@@ -123,7 +154,15 @@ class VideoReader:
                         else None
                     ),
                     declared_frame_count=stream.frames or None,
-                    rotation_degrees=int(first.rotation),
+                    rotation_degrees=(
+                        display_orientation(first)[0]
+                        if any(
+                            getattr(kind, "name", "") == "DISPLAYMATRIX"
+                            for kind in first.side_data
+                        )
+                        or int(first.rotation) % 90 == 0
+                        else 0
+                    ),
                     stream_index=stream.index,
                 )
             except (av.FFmpegError, ValueError) as exc:
@@ -157,6 +196,11 @@ class VideoReader:
                     if frame.pts is None or base is None:
                         raise VideoTimestampError("Missing PTS")
                     rgb = np.asarray(frame.to_ndarray(format="rgb24"), dtype=np.uint8)
+                    try:
+                        angle, mirrored = display_orientation(frame)
+                    except ValueError:
+                        angle, mirrored = 45, False
+                        flags = (*flags, "invalid_geometry")
                     yield FrameSample(
                         index=count,
                         timestamp_s=relative,
@@ -164,8 +208,9 @@ class VideoReader:
                         pts=frame.pts,
                         time_base=base,
                         rgb=rgb,
-                        rotation_degrees=int(frame.rotation),
+                        rotation_degrees=angle,
                         quality_flags=flags,
+                        mirrored=mirrored,
                     )
                     count += 1
                     previous_s = relative
