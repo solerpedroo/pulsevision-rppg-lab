@@ -23,6 +23,9 @@ export class LiveSession {
   private interval: ReturnType<typeof setInterval> | null = null;
   private timeout: ReturnType<typeof setTimeout> | null = null;
   private inflight = false;
+  private pendingBitmap: ImageBitmap | null = null;
+  private pendingTime: number | null = null;
+  private canvas: OffscreenCanvas | null = null;
   private lastSent = -Infinity;
   private lastResponse = 0;
   private skipped = 0;
@@ -69,7 +72,6 @@ export class LiveSession {
       this.video.srcObject = stream;
       await this.video.play();
       if (this.dead) return;
-      window.addEventListener("blur", this.blur);
       window.addEventListener("pagehide", this.pagehide);
       navigator.mediaDevices.addEventListener(
         "devicechange",
@@ -107,6 +109,10 @@ export class LiveSession {
         }
         this.inflight = false;
         this.lastResponse = performance.now();
+        const queued = this.pendingBitmap;
+        const queuedTime = this.pendingTime;
+        this.pendingBitmap = null;
+        this.pendingTime = null;
         this.buffer.push(message.sample);
         if (
           message.analysis &&
@@ -116,6 +122,13 @@ export class LiveSession {
           if (this.history.length > 30) this.history.shift();
         }
         this.callbacks.frame(message, this.skipped);
+        if (queued && queuedTime !== null && !this.dead) {
+          this.inflight = true;
+          this.lastSent = queuedTime;
+          this.send({ type: "frame", bitmap: queued, timestamp_s: queuedTime }, [
+            queued,
+          ]);
+        }
       };
       this.timeout = setTimeout(
         () => this.fail("Tempo limite ao iniciar o detector local."),
@@ -159,49 +172,59 @@ export class LiveSession {
     if (this.video.requestVideoFrameCallback)
       this.callback = this.video.requestVideoFrameCallback((_, metadata) => {
         this.schedule();
-        void this.capture(metadata.mediaTime);
+        this.capture(metadata.mediaTime);
       });
     else
       this.callback = requestAnimationFrame(() => {
         this.schedule();
-        void this.capture(this.video.currentTime);
+        this.capture(this.video.currentTime);
       });
   }
-  private async capture(timestamp: number) {
+  private snapshot(): ImageBitmap | null {
+    const width = Math.min(320, this.video.videoWidth),
+      height = Math.max(
+        1,
+        Math.round((width * this.video.videoHeight) / this.video.videoWidth),
+      );
+    if (!this.canvas || this.canvas.width !== width || this.canvas.height !== height)
+      this.canvas = new OffscreenCanvas(width, height);
+    const context = this.canvas.getContext("2d");
+    if (!context) return null;
+    context.drawImage(this.video, 0, 0, width, height);
+    return this.canvas.transferToImageBitmap();
+  }
+  private capture(timestamp: number) {
     if (this.dead) return;
-    if (!shouldCapture(timestamp, this.lastSent, this.inflight)) {
+    if (!shouldCapture(timestamp, this.lastSent, false)) {
       this.skipped++;
       return;
     }
     if (!Number.isFinite(timestamp) || timestamp < 0 || !this.video.videoWidth)
       return;
+    let bitmap: ImageBitmap | null = null;
+    try {
+      bitmap = this.snapshot();
+    } catch {
+      bitmap = null;
+    }
+    if (!bitmap) {
+      if (!this.dead) this.fail("Não foi possível ler um frame da câmera local.");
+      return;
+    }
+    if (this.inflight) {
+      this.pendingBitmap?.close();
+      this.pendingBitmap = bitmap;
+      this.pendingTime = timestamp;
+      return;
+    }
     this.inflight = true;
     this.lastSent = timestamp;
-    try {
-      const width = Math.min(320, this.video.videoWidth),
-        height = Math.max(
-          1,
-          Math.round((width * this.video.videoHeight) / this.video.videoWidth),
-        ),
-        bitmap = await createImageBitmap(this.video, {
-          resizeWidth: width,
-          resizeHeight: height,
-        });
-      if (this.dead) {
-        bitmap.close();
-        return;
-      }
-      this.send({ type: "frame", bitmap, timestamp_s: timestamp }, [bitmap]);
-    } catch {
-      if (!this.dead)
-        this.fail("Não foi possível ler um frame da câmera local.");
-    }
+    this.send({ type: "frame", bitmap, timestamp_s: timestamp }, [bitmap]);
   }
   private ended = () => this.fail("A câmera foi desconectada ou interrompida.");
   private visibility = () => {
     if (document.hidden) this.stop();
   };
-  private blur = () => this.stop();
   private pagehide = () => this.dispose();
   private devicechange = () => {
     void this.refreshDevices();
@@ -241,7 +264,8 @@ export class LiveSession {
     if (this.timeout) clearTimeout(this.timeout);
     document.removeEventListener("visibilitychange", this.visibility);
     window.removeEventListener("pagehide", this.pagehide);
-    window.removeEventListener("blur", this.blur);
+    this.pendingBitmap?.close();
+    this.pendingBitmap = null;
     navigator.mediaDevices?.removeEventListener(
       "devicechange",
       this.devicechange,
