@@ -29,7 +29,7 @@ export interface Page {
 }
 export interface Region {
   timestamp_s: number;
-  regions: Record<string, number[][]>;
+  regions: Record<string, number[][] | number[][][]>;
 }
 export interface RppgPoint {
   timestamp_s: number;
