@@ -49,7 +49,9 @@ class MediaPipeDetector:
             raise FaceError("Timestamp must be finite and nonnegative")
         timestamp_ms = math.floor(timestamp_s * 1000)
         if timestamp_ms <= self._last_ms:
-            raise FaceError("VIDEO timestamps collide or regress at millisecond precision")
+            # The sample timestamp stays exact. Only the detector clock moves,
+            # because VIDEO mode rejects two calls in the same millisecond.
+            timestamp_ms = self._last_ms + 1
         if rgb.dtype != np.uint8 or rgb.ndim != 3 or rgb.shape[2] != 3:
             raise FaceError("Detector requires uint8 RGB image")
         try:
