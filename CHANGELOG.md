@@ -2,6 +2,14 @@
 
 Mudanças relevantes são registradas aqui; não representa release publicada.
 
+## Não lançado — correções da revisão — 2026-11-09
+
+- Live: o bitmap fica preso ao instante da captura; blur com a aba visível não encerra a sessão.
+- Uma face ausente ou um vértice na borda não zera a janela inteira; ROI combinada usa as regiões que sobraram.
+- DSP: intervalo robusto, borda da janela alinhada ao gap permitido, CHROM com janela mínima do filtro, empate de pico fora da borda.
+- Aquisição: espelho do display matrix, frame rejeitado deixa de ser a referência, colisão de milissegundo não aborta o vídeo.
+- API: limpeza e SQLite não derrubam job saudável; Compose sobe para 10 GiB; overlay desenha os buracos da máscara.
+
 ## 1.0.0 — preparação local / Onda 11 — 2026-11-08
 
 - PV-1101–PV-1109: contraste, foco, navegação compartilhada e escala de sinais pequenos.
