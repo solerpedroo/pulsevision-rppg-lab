@@ -40,10 +40,28 @@ class RGBExtractor:
         self.config = config or ExtractionConfig()
         self.previous: NDArray[np.float64] | None = None
         self.previous_s: float | None = None
+        self.last_accepted_s: float | None = None
+        self.source_origin_s: float | None = None
         self.previous_brightness: dict[str, float] = {}
 
     def process(self, frame: FrameSample) -> list[Observation]:
-        rgb = orient_rgb(frame.rgb, frame.rotation_degrees)
+        if self.source_origin_s is None:
+            self.source_origin_s = frame.source_timestamp_s
+        try:
+            rgb = orient_rgb(frame.rgb, frame.rotation_degrees, frame.mirrored)
+        except ValueError:
+            return [
+                Observation(
+                    frame.timestamp_s,
+                    roi,
+                    "unreliable",
+                    None,
+                    None,
+                    tuple(frame.quality_flags) + ("invalid_geometry",),
+                    None,
+                )
+                for roi in ROIS
+            ]
         if self.previous_s is not None and frame.timestamp_s <= self.previous_s:
             raise ValueError("Extractor requires strictly increasing session timestamps")
         faces = self.detector.detect(rgb, frame.timestamp_s)
@@ -83,11 +101,17 @@ class RGBExtractor:
                 for roi in ROIS
             ]
         if self.on_regions:
-            self.on_regions(frame.timestamp_s, masks)
+            self.on_regions(frame.timestamp_s, {name: mask.copy() for name, mask in masks.items()})
         motion = 0.0
         reject = False
         if self.previous is None:
             flags.append("tracking_reset")
+            if (
+                self.last_accepted_s is not None
+                and frame.timestamp_s - self.last_accepted_s > self.config.max_tracking_gap_s
+            ):
+                flags.append("tracking_gap")
+                reject = True
         else:
             scale = float(np.linalg.norm(np.ptp(self.previous, axis=0)))
             motion = float(
@@ -100,18 +124,30 @@ class RGBExtractor:
             if motion > self.config.max_motion or scale_change > self.config.max_scale_change:
                 flags.append("unstable_geometry")
                 reject = True
-        if self.previous_s is not None:
-            if frame.timestamp_s - self.previous_s > self.config.max_tracking_gap_s:
+            elif (
+                self.last_accepted_s is not None
+                and frame.timestamp_s - self.last_accepted_s > self.config.max_tracking_gap_s
+            ):
                 flags.append("tracking_gap")
                 reject = True
-        if "temporal_gap" in flags:
-            reject = True
-        self.previous = landmarks.copy()
         self.previous_s = frame.timestamp_s
         observations = []
         valid_masks = []
         for roi in ROIS[:-1]:
-            mask = masks[roi]
+            mask = masks.get(roi)
+            if mask is None:
+                observations.append(
+                    Observation(
+                        frame.timestamp_s,
+                        roi,
+                        "unreliable",
+                        None,
+                        None,
+                        tuple(flags + ["invalid_geometry"]),
+                        motion,
+                    )
+                )
+                continue
             stats = summarize(rgb, mask, self.config)
             local_flags = flags.copy()
             if stats.valid_pixels < self.config.min_pixels:
@@ -120,19 +156,31 @@ class RGBExtractor:
                 local_flags.append("low_valid_fraction")
             if stats.dark_fraction:
                 local_flags.append("dark_pixels")
+            if stats.dark_fraction > self.config.max_dark_fraction:
+                local_flags.append("dark_roi")
             if stats.saturated_fraction:
                 local_flags.append("saturated_pixels")
+            if stats.saturated_fraction > self.config.max_saturated_fraction:
+                local_flags.append("saturated_roi")
             if stats.brightness is not None:
                 old = self.previous_brightness.get(roi)
                 if old is not None and abs(stats.brightness - old) / max(old, 1) > (
                     self.config.max_brightness_change
                 ):
                     local_flags.append("illumination_change")
-                self.previous_brightness[roi] = stats.brightness
             invalid = reject or any(
                 x in local_flags
-                for x in ("insufficient_pixels", "low_valid_fraction", "illumination_change")
+                for x in (
+                    "insufficient_pixels",
+                    "low_valid_fraction",
+                    "illumination_change",
+                    "dark_roi",
+                    "saturated_roi",
+                    "tracking_gap",
+                )
             )
+            if not invalid and stats.brightness is not None:
+                self.previous_brightness[roi] = stats.brightness
             sample = None
             if not invalid and stats.rgb_mean is not None:
                 sample = RGBSample(
@@ -156,6 +204,11 @@ class RGBExtractor:
                     motion,
                 )
             )
+        if not reject and any(item.sample is not None for item in observations):
+            self.previous = landmarks.copy()
+            self.last_accepted_s = frame.timestamp_s
+        else:
+            self.previous = None
         combined_mask = np.zeros(rgb.shape[:2], dtype=bool)
         for mask in valid_masks:
             combined_mask |= mask
