@@ -49,11 +49,17 @@ def select_peak(
     *,
     diagnostics: dict[str, float] | None = None,
 ) -> tuple[float, float, float]:
-    band = (frequencies >= config.low_hz) & (frequencies <= config.high_hz)
+    spacing_hint = float(frequencies[1] - frequencies[0]) if len(frequencies) > 1 else 0.0
+    band = (frequencies >= config.low_hz - spacing_hint * 1e-6) & (
+        frequencies <= config.high_hz + spacing_hint * 1e-6
+    )
     indices = np.flatnonzero(band)
     if len(indices) < 3 or not np.isfinite(power).all() or power[band].sum() <= 0:
         raise SignalQualityError("insufficient_spectral_energy")
-    peak = int(indices[np.argmax(power[band])])
+    maximum = float(power[indices].max())
+    tied = indices[np.isclose(power[indices], maximum, rtol=1e-9, atol=0.0)]
+    interior = tied[(tied != indices[0]) & (tied != indices[-1])]
+    peak = int(interior[0] if len(interior) else tied[0])
     if peak in (indices[0], indices[-1]):
         raise SignalQualityError("peak_at_band_edge")
     spacing = float(frequencies[1] - frequencies[0])
