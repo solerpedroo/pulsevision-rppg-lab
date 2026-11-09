@@ -36,7 +36,8 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     pids_limit: 128
-    mem_limit: 2g
+    # Above the worker RLIMIT_AS of 8 GiB so the cgroup does not kill the API first.
+    mem_limit: 10g
     cpus: 2
     init: true
     stop_grace_period: 15s
