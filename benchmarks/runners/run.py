@@ -129,7 +129,7 @@ def run_benchmark(
                     trace_path = Path(temporary.name) / "rgb.csv"
                     export_csv(
                         resolve(base, session.video or ""),
-                        resolve(base, manifest.model_path or ""),
+                        resolve(base, manifest.model_path or "", allow_absolute=True),
                         trace_path,
                     )
                 trace = load_trace_csv(trace_path, manifest.roi)
