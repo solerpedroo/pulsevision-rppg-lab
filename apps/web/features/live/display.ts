@@ -9,7 +9,7 @@ export class DisplayGuard {
       this.end = analysis.end_s;
       this.reasons = [];
     }
-    if (sample.reasons.length) this.reasons = [...sample.reasons];
+    this.reasons = sample.reasons.length ? [...sample.reasons] : [];
     return [...this.reasons];
   }
 }
