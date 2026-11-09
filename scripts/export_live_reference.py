@@ -17,6 +17,9 @@ from scipy.signal import butter, sosfilt_zi
 def outputs() -> dict[Path, dict[str, Any]]:
     fs = 30
     sos = butter(4, [0.7, 3.0], btype="bandpass", fs=fs, output="sos")
+    quality = asdict(QualityConfig())
+    # Browser cadence jitters below 30 Hz when MediaPipe runs on CPU.
+    quality["max_interval_cv"] = 0.45
     config = {
         "generator": "scripts/export_live_reference.py",
         "version": "live-v1",
@@ -25,7 +28,7 @@ def outputs() -> dict[Path, dict[str, Any]]:
         "zi": sosfilt_zi(sos).tolist(),
         "regions": REGIONS,
         "exclusions": EXCLUSIONS,
-        "quality": asdict(QualityConfig()),
+        "quality": quality,
     }
     cases = []
     for frequency in [1.0, 1.5, 2.2]:
