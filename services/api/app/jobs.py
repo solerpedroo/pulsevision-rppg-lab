@@ -237,7 +237,11 @@ class JobManager:
             self.db.commit()
             for path in self.files.iterdir():
                 if IDENTIFIER.fullmatch(path.name) and path.name not in known:
-                    if path.stat().st_mtime <= now - self.settings.retention_s:
+                    try:
+                        stale = path.stat().st_mtime <= now - self.settings.retention_s
+                    except FileNotFoundError:
+                        continue
+                    if stale:
                         self.clear_files(path.name)
 
     def _loop(self) -> None:
@@ -249,10 +253,13 @@ class JobManager:
                         identifier, process, started = self.active
                         directory = self.directory(identifier)
                         timed_out = time.monotonic() - started > self.settings.job_timeout_s
-                        oversized = (
-                            sum(p.stat().st_size for p in directory.rglob("*") if p.is_file())
-                            > self.settings.max_job_bytes
-                        )
+                        try:
+                            oversized = (
+                                sum(p.stat().st_size for p in directory.rglob("*") if p.is_file())
+                                > self.settings.max_job_bytes
+                            )
+                        except FileNotFoundError:
+                            oversized = False
                         if timed_out or oversized:
                             self._stop_active(identifier)
                             self.clear_files(identifier)
@@ -331,6 +338,10 @@ class JobManager:
                     if time.monotonic() - last_cleanup > self.settings.cleanup_interval_s:
                         self.cleanup()
                         last_cleanup = time.monotonic()
+                except FileNotFoundError:
+                    continue
+                except sqlite3.Error:
+                    continue
                 except (OSError, ValueError, KeyError):
                     if self.active:
                         identifier = self.active[0]
