@@ -45,9 +45,8 @@ it("extrai RGB sem inverter canais, conserva anatomia e rejeita perda de face", 
   const extract = new Extractor(),
     points = landmarks(),
     image = pixels([160, 90, 60]);
-  expect(
-    extract.extract(image, 320, 256, [points], 0).values.combined.rgb,
-  ).toBeNull();
+  const first = extract.extract(image, 320, 256, [points], 0);
+  expect(first.values.combined.rgb).toEqual([160, 90, 60]);
   const result = extract.extract(image, 320, 256, [points], 0.04);
   expect(result.values.combined.rgb).toEqual([160, 90, 60]);
   expect(result.values.forehead.valid_pixels).toBeGreaterThan(30);
