@@ -156,7 +156,7 @@ test("perda de foco, troca de câmera, dispositivo encerrado e saída liberam ca
   }
   await start();
   await page.evaluate(() => window.dispatchEvent(new Event("blur")));
-  await expect(page.locator(".pill")).toHaveText("Câmera desligada");
+  await expect(page.getByRole("button", { name: "Iniciar câmera" })).toBeDisabled();
   await start();
   await page.getByLabel("Câmera", { exact: true }).selectOption({ index: 1 });
   await expect(page.locator(".pill")).toHaveText("Câmera desligada");
